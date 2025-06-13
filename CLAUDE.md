@@ -21,6 +21,7 @@ This Spring Boot application is an AI based chat application built with Spring A
 - Use PostgresML embeddings model: 
   - Spring AI documentation for PostgresML can be found here: https://docs.spring.ai/reference/api/embeddings/postgres-ml-embeddings.html
   - PostgresML embeddings model documentation can be found here: https://docs.postgres.ai/docs/embeddings
+  - PostgresML github docs are here: https://github.com/postgresml/postgresml
 - Add functionality to register leave hours and billable client hours:
   - the user will only use the LLM chat to specify the hours they want to register
   - the application should provide endpoints to register leave hours

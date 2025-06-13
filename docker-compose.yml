@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   postgres:
     image: pgvector/pgvector:pg16
@@ -15,6 +13,26 @@ services:
       - ./init-scripts:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U sourcechat -d sourcechat"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - sourcechat-network
+
+  postgresml:
+    image: ghcr.io/postgresml/postgresml:2.10.0
+    container_name: sourcechat-postgresml
+    environment:
+      POSTGRES_DB: postgresml
+      POSTGRES_USER: postgresml
+      POSTGRES_PASSWORD: postgresml
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgresml_data:/var/lib/postgresql/data
+      - ./init-scripts-postgresml:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgresml -d postgresml"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -41,6 +59,8 @@ services:
 
 volumes:
   postgres_data:
+    driver: local
+  postgresml_data:
     driver: local
 
 networks:

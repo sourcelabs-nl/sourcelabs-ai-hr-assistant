@@ -1,10 +1,10 @@
--- Initialize PostgreSQL with vector extension
--- This script runs automatically when the container starts
+-- Initialize PostgreSQL with pgvector extension
+-- This script runs automatically when the pgvector container starts
 
 -- Enable the vector extension
 CREATE EXTENSION IF NOT EXISTS vector;
 
--- Verify the extension is installed
+-- Verify the vector extension is installed
 SELECT name, default_version, installed_version 
 FROM pg_available_extensions 
 WHERE name = 'vector';
@@ -24,7 +24,7 @@ BEGIN
     -- Test vector operations
     PERFORM embedding <-> '[1,1,1]' FROM vector_test;
     
-    RAISE NOTICE 'Vector extension is working correctly!';
+    RAISE NOTICE 'pgvector extension is working correctly!';
     
     DROP TABLE vector_test;
 END
