@@ -4,46 +4,143 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a Spring Boot 3.5.0 application written in Kotlin, using Java 21. The project is called "sourcechat" and appears to be a chat application framework. It uses Maven as the build tool and includes Testcontainers for integration testing.
+SourceChat is a fully-functional Spring Boot 3.5.0 HR assistant application built with Kotlin and Java 21. It provides AI-powered chat functionality for hour registration and employee manual queries using local Ollama models and RAG capabilities.
 
-## Requirements
+## Current Implementation Status
 
-This Spring Boot application is an AI based chat application built with Spring AI.
+✅ **COMPLETED FEATURES:**
+- **AI Chat System**: Ollama llama3.2 for chat, nomic-embed-text for embeddings
+- **Hour Registration**: Leave hours and billable client hours with full CRUD operations
+- **MCP Integration**: Server/client architecture for tool callbacks
+- **RAG System**: PostgreSQL vector store with employee manual content
+- **React Frontend**: Material UI chat interface with TypeScript
+- **Database Schema**: PostgreSQL with pgvector extension
+- **Docker Setup**: Multi-service composition with health checks
 
-- Containing an endpoint for sending chats to a Spring AI ChatClient. 
-- Use a local LLM using Ollama llama3.2 for chat running on port 1234.
-- Instructions for claude with Spring AI can be found: https://docs.spring.io/spring-ai/reference/api/chat/anthropic-chat.html
-- It should store chat memory into a postgres database.
-- It should use a postgres vector database for RAG.
-- It should use the following system prompt "You are the Sourcelabs HR assistant. You provide information about leave hours, billable client hours and the employee manual."
-- The LLM should connect to the hour registration system using MCP. This application will provide endpoints for this.
-- Use Ollama embeddings model: 
-  - Spring AI documentation for ollama embeddings: https://docs.spring.io/spring-ai/reference/api/embeddings/ollama-embeddings.html
-  - Add the ollama embeddings model to docker compose config.
-- Add functionality to register leave hours and billable client hours:
-  - the user will only use the LLM chat to specify the hours they want to register
-  - the application should provide endpoints to register leave hours
-  - the application should provide endpoints to register billable client hours
-    - billable client hours should indicate the client name, location and hours worked including type of travel (if applicable) 
-    - if traveled by car or bike also specify kilometers traveled (from/to) 
-  - The application should expose this functionality via a REST API.
-  - The application should expose this functionality using an MCP server.
-  - MCP server instructions can be found here: 
-    - https://piotrminkowski.com/2025/03/17/using-model-context-protocol-mcp-with-spring-ai/
-    - https://docs.spring.io/spring-ai/reference/api/mcp/mcp-server-boot-starter-docs.html
-  - Use Web
-  - MCP example can be found here:https://www.baeldung.com/spring-ai-model-context-protocol-mcp
-- The LLM should use an MCP client for leave hours and billable client hours.
-  - MCP client instructions can be found here: https://docs.spring.io/spring-ai/reference/api/mcp/mcp-client-boot-starter-docs.html
-- The application exposes a UI which is connected to the application that allows for chatting with the LLM
-  - the user will only use the LLM chat to specify the hours they want to register
-  - the UI should be build using React and TypeScript
-  - the UI should be able to connect to the Spring AI ChatClient
-  - the UI should use material UI for styling
-- Use Spring Data JDB for database interactions.
-- An example of a Spring AI application can be found here: https://piotrminkowski.com/2025/01/28/getting-started-with-spring-ai-and-chat-model/
-- Use Spring Boot starters for Spring AI.
-- Add a docker compose file for the postgres database and make sure to add the vector extension.
+## Architecture
+
+**Backend Stack:**
+- Spring Boot 3.5.0 with Spring AI
+- Kotlin 1.9.25, Java 21
+- PostgreSQL with pgvector for vector storage
+- Spring Data JDBC for database operations
+- MCP (Model Context Protocol) for tool integration
+
+**AI Stack:**
+- **Chat Model**: Ollama llama3.2 (localhost:1234)
+- **Embeddings**: Ollama nomic-embed-text (localhost:11434)
+- **Vector Store**: PostgreSQL pgvector with 768-dimensional embeddings
+- **RAG**: Employee manual content for context
+
+**Frontend Stack:**
+- React 18.2.0 with TypeScript 4.9.4
+- Material UI 5.14.20 for styling
+- Chat interface with real-time messaging
+- Integrated with Spring Boot static resources
+
+## Current Configuration
+
+**Services (Docker Compose):**
+```yaml
+- postgres (5432): PostgreSQL with pgvector extension
+- ollama-chat (1234): Ollama llama3.2 for chat
+- ollama-embeddings (11434): Ollama nomic-embed-text for embeddings
+```
+
+**Key Endpoints:**
+- `POST /api/chat`: Chat with HR assistant
+- `POST /api/hours/leave`: Register leave hours
+- `POST /api/hours/billable`: Register billable hours
+- `GET /api/hours/leave/{employeeId}`: Get leave history
+- `GET /api/hours/billable/{employeeId}`: Get billable history
+
+**Database Tables:**
+- `chat_messages`: Chat conversation history
+- `leave_hours`: Leave hour registrations
+- `billable_client_hours`: Billable hour registrations  
+- `vector_store`: RAG document embeddings (768-dim)
+
+## Setup Instructions
+
+**1. Start Services:**
+```bash
+docker-compose up -d
+```
+
+**2. Pull AI Models:**
+```bash
+# Chat model
+docker exec sourcechat-ollama-chat ollama pull llama3.2
+
+# Embedding model  
+docker exec sourcechat-ollama-embeddings ollama pull nomic-embed-text
+```
+
+**3. Build Frontend:**
+```bash
+./build-frontend.sh
+```
+
+**4. Run Application:**
+```bash
+./mvnw spring-boot:run
+```
+
+**5. Access Application:**
+- Frontend: http://localhost:8080
+- API: http://localhost:8080/api/*
+
+## Features Implemented
+
+**HR Assistant Chat:**
+- Natural language hour registration
+- Employee manual queries with RAG
+- Tool-based hour registration and retrieval
+- Session-based chat memory
+
+**Hour Registration System:**
+- Leave hours: Types, dates, approval workflow
+- Billable hours: Client, location, travel tracking
+- MCP tool integration for chat-based registration
+- REST API for direct access
+
+**RAG (Retrieval Augmented Generation):**
+- Employee manual content in vector store
+- Semantic search for relevant information
+- Context-aware responses
+
+**Frontend Interface:**
+- Material UI chat interface
+- Real-time messaging
+- Example queries and suggestions
+- Error handling and loading states
+
+## Implementation Details
+
+**Key Source Files:**
+- `src/main/kotlin/nl/sourcelabs/sourcechat/config/ChatConfig.kt`: Chat client configuration
+- `src/main/kotlin/nl/sourcelabs/sourcechat/service/ChatService.kt`: Chat service with RAG
+- `src/main/kotlin/nl/sourcelabs/sourcechat/mcp/McpServerConfig.kt`: MCP tools configuration
+- `src/main/kotlin/nl/sourcelabs/sourcechat/controller/ChatController.kt`: REST API endpoints
+- `src/main/resources/schema.sql`: Database schema with vector_store table
+- `frontend/src/components/ChatInterface.tsx`: React chat UI component
+
+**Current System Prompt:**
+"You are the Sourcelabs HR assistant. You provide information about leave hours, billable client hours and the employee manual."
+
+**Available MCP Tools:**
+- `registerLeaveHours`: Register employee leave hours
+- `registerBillableHours`: Register billable client hours
+- `getLeaveHoursSummary`: Get total leave hours for year
+- `getBillableHoursSummary`: Get total billable hours for year
+- `getLeaveHistory`: Get recent leave history
+- `getBillableHistory`: Get recent billable hours history
+
+**Example Queries:**
+- "Register 8 hours of sick leave for employee123 from 2025-06-13 to 2025-06-13"
+- "Log 6 billable hours for ClientABC at Amsterdam office on 2025-06-13"
+- "Show me my leave history for employee123"
+- "How many billable hours did employee123 log this year?"
 
 # Considerations
 
@@ -109,9 +206,21 @@ This Spring Boot application is an AI based chat application built with Spring A
 
 ## Important Dependencies
 
-- **Spring AI BOM**: Version 1.0.0 is managed via dependencyManagement, suggesting AI/ML functionality will be added
-- **Jackson Kotlin Module**: For JSON serialization/deserialization
-- **Testcontainers**: For integration testing with real services
+**Spring AI Stack:**
+- **spring-ai-starter-model-ollama**: Ollama integration for chat and embeddings
+- **spring-ai-starter-vector-store-pgvector**: PostgreSQL vector store
+- **spring-ai-starter-mcp-client**: MCP client for tool integration  
+- **spring-ai-starter-mcp-server-webmvc**: MCP server for exposing tools
+
+**Database & Storage:**
+- **postgresql**: PostgreSQL JDBC driver
+- **spring-boot-starter-data-jdbc**: Spring Data JDBC
+- **Jackson Kotlin Module**: JSON serialization/deserialization
+
+**Testing:**
+- **Testcontainers**: Integration testing with real services
+- **JUnit 5**: Unit testing framework
+- **Spring Boot Test**: Integration testing
 
 ## Testing Strategy
 
