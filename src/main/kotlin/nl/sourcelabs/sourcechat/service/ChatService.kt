@@ -12,7 +12,8 @@ import java.util.*
 class ChatService(
     private val chatClient: ChatClient,
     private val chatMessageRepository: ChatMessageRepository,
-    private val documentService: DocumentService
+    private val documentService: DocumentService,
+    private val hourRegistrationService: HourRegistrationService
 ) {
     
     fun chat(request: ChatRequest): ChatResponse {
