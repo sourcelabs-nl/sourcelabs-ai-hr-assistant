@@ -132,7 +132,6 @@
                 </dependencies>
             </plugin>
             <!-- Frontend build disabled for now - run manually with ./build-frontend.sh -->
-            <!--
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
@@ -145,12 +144,12 @@
                             <goal>exec</goal>
                         </goals>
                         <configuration>
-                            <executable>./build-frontend.sh</executable>
+                            <executable>bash</executable>
+                            <arguments>./build-frontend.sh</arguments>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
-            -->
         </plugins>
     </build>
 
