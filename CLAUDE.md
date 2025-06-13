@@ -18,6 +18,9 @@ This Spring Boot application is an AI based chat application built with Spring A
 - It should use a postgres vector database for RAG.
 - It should use the following system prompt "You are the Sourcelabs HR assistant. You provide information about leave hours, billable client hours and the employee manual."
 - The LLM should connect to the hour registration system using MCP. This application will provide endpoints for this.
+- Use PostgresML embeddings model: 
+  - Spring AI documentation for PostgresML can be found here: https://docs.spring.ai/reference/api/embeddings/postgres-ml-embeddings.html
+  - PostgresML embeddings model documentation can be found here: https://docs.postgres.ai/docs/embeddings
 - Add functionality to register leave hours and billable client hours:
   - the user will use the LLM chat to specify the hours they want to register
   - the application should provide endpoints to register leave hours
@@ -39,7 +42,10 @@ This Spring Boot application is an AI based chat application built with Spring A
 
 - Whenever in doubt, ask the user for input.
 - Whenever a choice needs to be made, ask the user for input.
-- If you complete a task and the code compiles and the application runs, then create a commit with the message "feat: <description of the feature>".
+- When you complete a task 
+  - check if code compiles 
+  - check if application runs
+  - create a commit with the message "feat: <description of the feature>".
 
 ## Key Technologies
 

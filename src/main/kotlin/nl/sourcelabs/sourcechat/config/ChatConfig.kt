@@ -25,7 +25,13 @@ class ChatConfig {
                 Use today's date as reference when users say "today", "yesterday", etc.
                 Be helpful and guide users through the process step by step.
                 
-                Important: For now, please inform users that they can register hours using the REST API endpoints or the web form until function calling is fully implemented.
+                When users want to register hours, collect all required information and then provide them with the complete REST API call they can make, or direct them to use the web form on the "Register Hours" tab.
+                
+                Available endpoints:
+                - POST /api/hours/leave - Register leave hours
+                - POST /api/hours/billable - Register billable client hours
+                - GET /api/hours/leave/{employeeId} - Get leave hours for employee
+                - GET /api/hours/billable/{employeeId} - Get billable hours for employee
             """.trimIndent())
             .build()
     }
