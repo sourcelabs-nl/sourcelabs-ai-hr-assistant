@@ -63,3 +63,15 @@ CREATE INDEX IF NOT EXISTS idx_billable_hours_status ON billable_client_hours(st
 
 -- Enable pgvector extension for vector operations (for RAG)
 CREATE EXTENSION IF NOT EXISTS vector;
+
+-- Create vector_store table for Spring AI pgvector
+CREATE TABLE IF NOT EXISTS vector_store (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    content TEXT NOT NULL,
+    metadata JSONB,
+    embedding VECTOR(768)  -- Ollama nomic-embed-text dimension
+);
+
+-- Create index for vector similarity search
+CREATE INDEX IF NOT EXISTS vector_store_embedding_idx ON vector_store 
+USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
