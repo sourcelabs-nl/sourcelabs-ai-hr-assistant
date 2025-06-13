@@ -11,8 +11,7 @@ This is a Spring Boot 3.5.0 application written in Kotlin, using Java 21. The pr
 This Spring Boot application is an AI based chat application built with Spring AI.
 
 - Containing an endpoint for sending chats to a Spring AI ChatClient. 
-- Use anthropic claude LLM for chat functionality.
-- Use a local LLM running on port 1234.
+- Use a local LLM using Ollama llama3.2 for chat running on port 1234.
 - Instructions for claude with Spring AI can be found: https://docs.spring.io/spring-ai/reference/api/chat/anthropic-chat.html
 - It should store chat memory into a postgres database.
 - It should use a postgres vector database for RAG.

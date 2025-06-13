@@ -12,7 +12,7 @@ class ChatConfig {
     
     @Bean
     fun chatClient(
-        @Qualifier("anthropicChatModel") chatModel: ChatModel,
+        @Qualifier("ollamaChatModel") chatModel: ChatModel,
         hourRegistrationToolCallbackProvider: ToolCallbackProvider
     ): ChatClient {
         return ChatClient.builder(chatModel)
