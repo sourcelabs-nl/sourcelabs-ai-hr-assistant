@@ -4,6 +4,7 @@ import nl.sourcelabs.sourcechat.dto.ChatRequest
 import nl.sourcelabs.sourcechat.dto.ChatResponse
 import nl.sourcelabs.sourcechat.entity.ChatMessage
 import nl.sourcelabs.sourcechat.repository.ChatMessageRepository
+import org.apache.logging.log4j.LogManager
 import org.springframework.ai.chat.client.ChatClient
 import org.springframework.stereotype.Service
 import java.util.*
@@ -12,9 +13,10 @@ import java.util.*
 class ChatService(
     private val chatClient: ChatClient,
     private val chatMessageRepository: ChatMessageRepository,
-    private val documentService: DocumentService,
-    private val hourRegistrationService: HourRegistrationService
+    private val documentService: DocumentService
 ) {
+
+    private val logger = LogManager.getLogger()
     
     fun chat(request: ChatRequest): ChatResponse {
         val sessionId = request.sessionId ?: UUID.randomUUID().toString()
@@ -53,11 +55,16 @@ class ChatService(
             append("Current user message: ${request.message}")
         }
         
-        val aiResponse = chatClient.prompt()
-            .user(conversationHistory)
-            .call()
-            .content() ?: "I apologize, but I'm unable to provide a response at the moment. Please try again."
-        
+        val aiResponse = try {
+            chatClient.prompt()
+                .user(conversationHistory)
+                .call()
+               .content() ?: "I apologize, but I'm unable to provide a response at the moment. Please try again."
+        } catch (e: Exception) {
+            logger.warn(e)
+            throw e
+        }
+
         // Save assistant response
         val assistantMessage = ChatMessage(
             sessionId = sessionId,
