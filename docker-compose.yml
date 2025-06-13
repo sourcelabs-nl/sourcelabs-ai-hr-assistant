@@ -14,53 +14,27 @@ services:
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U sourcechat -d sourcechat"]
       interval: 10s
-      timeout: 5s
+      timeout: 120s
       retries: 5
     networks:
       - sourcechat-network
 
-  postgresml:
-    image: ghcr.io/postgresml/postgresml:2.10.0
-    container_name: sourcechat-postgresml
-    environment:
-      POSTGRES_DB: postgresml
-      POSTGRES_USER: postgresml
-      POSTGRES_PASSWORD: postgresml
+  ollama:
+    image: ollama/ollama:latest
+    container_name: sourcechat-ollama
     ports:
-      - "5433:5432"
+      - "11434:11434"
     volumes:
-      - postgresml_data:/var/lib/postgresql/data
-      - ./init-scripts-postgresml:/docker-entrypoint-initdb.d
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgresml -d postgresml"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - sourcechat-network
-
-  # Optional: pgAdmin for database management
-  pgadmin:
-    image: dpage/pgadmin4:latest
-    container_name: sourcechat-pgadmin
+      - ollama_data:/root/.ollama
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@sourcechat.com
-      PGADMIN_DEFAULT_PASSWORD: admin
-      PGADMIN_CONFIG_SERVER_MODE: 'False'
-    ports:
-      - "8081:80"
-    depends_on:
-      postgres:
-        condition: service_healthy
+      - OLLAMA_HOST=0.0.0.0
     networks:
       - sourcechat-network
-    profiles:
-      - dev # Only start with --profile dev
 
 volumes:
   postgres_data:
     driver: local
-  postgresml_data:
+  ollama_data:
     driver: local
 
 networks:
