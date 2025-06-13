@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: sourcechat-postgres
+    environment:
+      POSTGRES_DB: sourcechat
+      POSTGRES_USER: sourcechat
+      POSTGRES_PASSWORD: sourcechat
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sourcechat -d sourcechat"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - sourcechat-network
+
+  # Optional: pgAdmin for database management
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: sourcechat-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@sourcechat.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "8081:80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - sourcechat-network
+    profiles:
+      - dev # Only start with --profile dev
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  sourcechat-network:
+    driver: bridge

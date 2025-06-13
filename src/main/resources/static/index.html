@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SourceChat - HR Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #f5f5f5;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            max-width: 800px;
+            margin: 0 auto;
+            width: 100%;
+            background: white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        
+        .messages {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .message {
+            max-width: 70%;
+            padding: 0.75rem 1rem;
+            border-radius: 18px;
+            word-wrap: break-word;
+        }
+        
+        .message.user {
+            align-self: flex-end;
+            background-color: #007bff;
+            color: white;
+        }
+        
+        .message.assistant {
+            align-self: flex-start;
+            background-color: #e9ecef;
+            color: #333;
+        }
+        
+        .input-container {
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .message-input {
+            flex: 1;
+            padding: 0.75rem;
+            border: 1px solid #ced4da;
+            border-radius: 20px;
+            outline: none;
+            font-size: 1rem;
+        }
+        
+        .message-input:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+        }
+        
+        .send-button {
+            padding: 0.75rem 1.5rem;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.2s;
+        }
+        
+        .send-button:hover:not(:disabled) {
+            background-color: #0056b3;
+        }
+        
+        .send-button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        
+        .typing-indicator {
+            align-self: flex-start;
+            padding: 0.75rem 1rem;
+            background-color: #e9ecef;
+            border-radius: 18px;
+            font-style: italic;
+            color: #6c757d;
+        }
+        
+        .error-message {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            padding: 0.75rem;
+            border-radius: 4px;
+            margin: 0.5rem;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        
+        .nav-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid #dee2e6;
+            background: white;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        
+        .nav-btn.active {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+        
+        .nav-btn:hover:not(.active) {
+            background: #f8f9fa;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .form-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+        
+        .form-group textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+        
+        .submit-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .submit-btn:hover {
+            background: #218838;
+        }
+        
+        .success-message {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            padding: 0.75rem;
+            border-radius: 4px;
+            margin: 0.5rem 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>SourceChat - HR Assistant</h1>
+        <p>Ask me about leave hours, billable client hours, and the employee manual</p>
+        <div class="nav-buttons">
+            <button onclick="showTab('chat')" class="nav-btn active">Chat</button>
+            <button onclick="showTab('hours')" class="nav-btn">Register Hours</button>
+        </div>
+    </div>
+    
+    <!-- Chat Tab -->
+    <div id="chatTab" class="tab-content active">
+        <div class="chat-container">
+            <div class="messages" id="messages">
+                <div class="message assistant">
+                    Hello! I'm your Sourcelabs HR assistant. How can I help you today?
+                </div>
+            </div>
+            
+            <div class="input-container">
+                <input type="text" class="message-input" id="messageInput" placeholder="Type your message here..." maxlength="1000">
+                <button class="send-button" id="sendButton">Send</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Hours Registration Tab -->
+    <div id="hoursTab" class="tab-content">
+        <div class="form-container">
+            <h2>Register Hours</h2>
+            
+            <!-- Leave Hours Form -->
+            <div style="margin-bottom: 3rem;">
+                <h3>Register Leave Hours</h3>
+                <form id="leaveForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="leaveEmployeeId">Employee ID</label>
+                            <input type="text" id="leaveEmployeeId" name="employeeId" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="leaveType">Leave Type</label>
+                            <select id="leaveType" name="leaveType" required>
+                                <option value="ANNUAL_LEAVE">Annual Leave</option>
+                                <option value="SICK_LEAVE">Sick Leave</option>
+                                <option value="PERSONAL_LEAVE">Personal Leave</option>
+                                <option value="MATERNITY_LEAVE">Maternity Leave</option>
+                                <option value="PATERNITY_LEAVE">Paternity Leave</option>
+                                <option value="BEREAVEMENT_LEAVE">Bereavement Leave</option>
+                                <option value="OTHER">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="startDate">Start Date</label>
+                            <input type="date" id="startDate" name="startDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="endDate">End Date</label>
+                            <input type="date" id="endDate" name="endDate" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="totalHours">Total Hours</label>
+                        <input type="number" id="totalHours" name="totalHours" step="0.5" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="leaveDescription">Description (Optional)</label>
+                        <textarea id="leaveDescription" name="description" placeholder="Additional details about the leave request"></textarea>
+                    </div>
+                    <button type="submit" class="submit-btn">Register Leave Hours</button>
+                </form>
+            </div>
+            
+            <!-- Billable Hours Form -->
+            <div>
+                <h3>Register Billable Client Hours</h3>
+                <form id="billableForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="billableEmployeeId">Employee ID</label>
+                            <input type="text" id="billableEmployeeId" name="employeeId" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="clientName">Client Name</label>
+                            <input type="text" id="clientName" name="clientName" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="projectName">Project Name (Optional)</label>
+                            <input type="text" id="projectName" name="projectName">
+                        </div>
+                        <div class="form-group">
+                            <label for="location">Location</label>
+                            <input type="text" id="location" name="location" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="workDate">Work Date</label>
+                            <input type="date" id="workDate" name="workDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="hoursWorked">Hours Worked</label>
+                            <input type="number" id="hoursWorked" name="hoursWorked" step="0.25" min="0" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="workDescription">Work Description</label>
+                        <textarea id="workDescription" name="description" required placeholder="Describe the work performed"></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="travelType">Travel Type (Optional)</label>
+                            <select id="travelType" name="travelType">
+                                <option value="">No Travel</option>
+                                <option value="CAR">Car</option>
+                                <option value="BIKE">Bike</option>
+                                <option value="PUBLIC_TRANSPORT">Public Transport</option>
+                                <option value="FLIGHT">Flight</option>
+                                <option value="TRAIN">Train</option>
+                                <option value="OTHER">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="travelKilometers">Travel Kilometers (Optional)</label>
+                            <input type="number" id="travelKilometers" name="travelKilometers" step="0.1" min="0">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="travelFrom">Travel From (Optional)</label>
+                            <input type="text" id="travelFrom" name="travelFromLocation">
+                        </div>
+                        <div class="form-group">
+                            <label for="travelTo">Travel To (Optional)</label>
+                            <input type="text" id="travelTo" name="travelToLocation">
+                        </div>
+                    </div>
+                    <button type="submit" class="submit-btn">Register Billable Hours</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        class ChatApp {
+            constructor() {
+                this.messagesContainer = document.getElementById('messages');
+                this.messageInput = document.getElementById('messageInput');
+                this.sendButton = document.getElementById('sendButton');
+                this.sessionId = null;
+                
+                this.init();
+            }
+            
+            init() {
+                this.sendButton.addEventListener('click', () => this.sendMessage());
+                this.messageInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        this.sendMessage();
+                    }
+                });
+                
+                // Focus on input
+                this.messageInput.focus();
+            }
+            
+            async sendMessage() {
+                const message = this.messageInput.value.trim();
+                if (!message) return;
+                
+                // Add user message to UI
+                this.addMessage('user', message);
+                this.messageInput.value = '';
+                this.setLoading(true);
+                
+                // Show typing indicator
+                const typingIndicator = this.showTypingIndicator();
+                
+                try {
+                    const response = await fetch('/api/chat', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            message: message,
+                            sessionId: this.sessionId
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    this.sessionId = data.sessionId;
+                    
+                    // Remove typing indicator and add response
+                    this.removeTypingIndicator(typingIndicator);
+                    this.addMessage('assistant', data.message);
+                    
+                } catch (error) {
+                    console.error('Error sending message:', error);
+                    this.removeTypingIndicator(typingIndicator);
+                    this.showError('Sorry, I encountered an error. Please try again.');
+                } finally {
+                    this.setLoading(false);
+                    this.messageInput.focus();
+                }
+            }
+            
+            addMessage(role, content) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${role}`;
+                messageDiv.textContent = content;
+                this.messagesContainer.appendChild(messageDiv);
+                this.scrollToBottom();
+            }
+            
+            showTypingIndicator() {
+                const typingDiv = document.createElement('div');
+                typingDiv.className = 'typing-indicator';
+                typingDiv.textContent = 'HR Assistant is typing...';
+                this.messagesContainer.appendChild(typingDiv);
+                this.scrollToBottom();
+                return typingDiv;
+            }
+            
+            removeTypingIndicator(indicator) {
+                if (indicator && indicator.parentNode) {
+                    indicator.parentNode.removeChild(indicator);
+                }
+            }
+            
+            showError(message) {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'error-message';
+                errorDiv.textContent = message;
+                this.messagesContainer.appendChild(errorDiv);
+                this.scrollToBottom();
+            }
+            
+            setLoading(loading) {
+                this.sendButton.disabled = loading;
+                this.messageInput.disabled = loading;
+                this.sendButton.textContent = loading ? 'Sending...' : 'Send';
+            }
+            
+            scrollToBottom() {
+                this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
+            }
+        }
+        
+        // Tab functionality
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Remove active class from all nav buttons
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName + 'Tab').classList.add('active');
+            
+            // Add active class to selected nav button
+            event.target.classList.add('active');
+        }
+        
+        // Form submission handlers
+        function setupFormHandlers() {
+            // Leave hours form
+            document.getElementById('leaveForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const data = Object.fromEntries(formData);
+                
+                try {
+                    const response = await fetch('/api/hours/leave', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(data)
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (response.ok) {
+                        showMessage('success', result.message);
+                        e.target.reset();
+                    } else {
+                        showMessage('error', result.message);
+                    }
+                } catch (error) {
+                    showMessage('error', 'Error submitting leave request: ' + error.message);
+                }
+            });
+            
+            // Billable hours form
+            document.getElementById('billableForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const data = Object.fromEntries(formData);
+                
+                // Remove empty optional fields
+                Object.keys(data).forEach(key => {
+                    if (data[key] === '') {
+                        delete data[key];
+                    }
+                });
+                
+                try {
+                    const response = await fetch('/api/hours/billable', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(data)
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (response.ok) {
+                        showMessage('success', result.message);
+                        e.target.reset();
+                    } else {
+                        showMessage('error', result.message);
+                    }
+                } catch (error) {
+                    showMessage('error', 'Error submitting billable hours: ' + error.message);
+                }
+            });
+        }
+        
+        function showMessage(type, message) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = type === 'success' ? 'success-message' : 'error-message';
+            messageDiv.textContent = message;
+            
+            // Insert at the top of the active form container
+            const activeTab = document.querySelector('.tab-content.active');
+            const container = activeTab.querySelector('.form-container') || activeTab;
+            container.insertBefore(messageDiv, container.firstChild);
+            
+            // Remove message after 5 seconds
+            setTimeout(() => {
+                if (messageDiv.parentNode) {
+                    messageDiv.parentNode.removeChild(messageDiv);
+                }
+            }, 5000);
+        }
+        
+        // Initialize the app when the DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            new ChatApp();
+            setupFormHandlers();
+        });
+    </script>
+</body>
+</html>
