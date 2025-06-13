@@ -26,10 +26,12 @@ services:
       - "11434:11434"
     volumes:
       - ollama_data:/root/.ollama
+      - ./entrypoint.sh:/entrypoint.sh
     environment:
       - OLLAMA_HOST=0.0.0.0
     networks:
       - sourcechat-network
+    entrypoint: ["bash","/entrypoint.sh"]
 
 volumes:
   postgres_data:
