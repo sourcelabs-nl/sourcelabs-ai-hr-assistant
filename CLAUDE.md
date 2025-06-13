@@ -22,7 +22,7 @@ This Spring Boot application is an AI based chat application built with Spring A
   - Spring AI documentation for PostgresML can be found here: https://docs.spring.ai/reference/api/embeddings/postgres-ml-embeddings.html
   - PostgresML embeddings model documentation can be found here: https://docs.postgres.ai/docs/embeddings
 - Add functionality to register leave hours and billable client hours:
-  - the user will use the LLM chat to specify the hours they want to register
+  - the user will only use the LLM chat to specify the hours they want to register
   - the application should provide endpoints to register leave hours
   - the application should provide endpoints to register billable client hours
     - billable client hours should indicate the client name, location and hours worked including type of travel (if applicable) 
@@ -33,7 +33,11 @@ This Spring Boot application is an AI based chat application built with Spring A
   - MCP example can be found here:https://www.baeldung.com/spring-ai-model-context-protocol-mcp
 - The LLM should use an MCP client for leave hours and billable client hours.
   - MCP client instructions can be found here: https://docs.spring.io/spring-ai/reference/api/mcp/mcp-client-boot-starter-docs.html
-- The application exposes a UI which is connected to the application that allows for chatting with the LLM. 
+- The application exposes a UI which is connected to the application that allows for chatting with the LLM
+  - the user will only use the LLM chat to specify the hours they want to register
+  - the UI should be build using React and TypeScript
+  - the UI should be able to connect to the Spring AI ChatClient
+  - the UI should use material UI for styling
 - Use Spring Data JDB for database interactions.
 - An example of a Spring AI application can be found here: https://piotrminkowski.com/2025/01/28/getting-started-with-spring-ai-and-chat-model/
 - Use Spring Boot starters for Spring AI.
