@@ -13,7 +13,7 @@ rm -rf src/main/resources/static/*
 rm -rf src/main/resources/public/*
 
 # Copy the build output
-cp -r frontend/build/* src/main/resources/static/
+cp -r frontend/build/static/* src/main/resources/static/
 cp frontend/build/index.html src/main/resources/public/
 
 echo "Frontend build complete!"
