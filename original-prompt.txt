@@ -1,0 +1,38 @@
+## Requirements
+
+This Spring Boot application is an AI based chat application built with Spring AI.
+
+- Containing an endpoint for sending chats to a Spring AI ChatClient.
+- Use a local LLM using Ollama llama3.2 for chat running on port 1234.
+- Instructions for claude with Spring AI can be found: https://docs.spring.io/spring-ai/reference/api/chat/anthropic-chat.html
+- It should store chat memory into a postgres database.
+- It should use a postgres vector database for RAG.
+- It should use the following system prompt "You are the Sourcelabs HR assistant. You provide information about leave hours, billable client hours and the employee manual."
+- The LLM should connect to the hour registration system using MCP. This application will provide endpoints for this.
+- Use Ollama embeddings model:
+  - Spring AI documentation for ollama embeddings: https://docs.spring.io/spring-ai/reference/api/embeddings/ollama-embeddings.html
+  - Add the ollama embeddings model to docker compose config.
+- Add functionality to register leave hours and billable client hours:
+  - the user will only use the LLM chat to specify the hours they want to register
+  - the application should provide endpoints to register leave hours
+  - the application should provide endpoints to register billable client hours
+    - billable client hours should indicate the client name, location and hours worked including type of travel (if applicable)
+    - if traveled by car or bike also specify kilometers traveled (from/to)
+  - The application should expose this functionality via a REST API.
+  - The application should expose this functionality using an MCP server.
+  - MCP server instructions can be found here:
+    - https://piotrminkowski.com/2025/03/17/using-model-context-protocol-mcp-with-spring-ai/
+    - https://docs.spring.io/spring-ai/reference/api/mcp/mcp-server-boot-starter-docs.html
+  - Use Web
+  - MCP example can be found here:https://www.baeldung.com/spring-ai-model-context-protocol-mcp
+- The LLM should use an MCP client for leave hours and billable client hours.
+  - MCP client instructions can be found here: https://docs.spring.io/spring-ai/reference/api/mcp/mcp-client-boot-starter-docs.html
+- The application exposes a UI which is connected to the application that allows for chatting with the LLM
+  - the user will only use the LLM chat to specify the hours they want to register
+  - the UI should be build using React and TypeScript
+  - the UI should be able to connect to the Spring AI ChatClient
+  - the UI should use material UI for styling
+- Use Spring Data JDB for database interactions.
+- An example of a Spring AI application can be found here: https://piotrminkowski.com/2025/01/28/getting-started-with-spring-ai-and-chat-model/
+- Use Spring Boot starters for Spring AI.
+- Add a docker compose file for the postgres database and make sure to add the vector extension.
