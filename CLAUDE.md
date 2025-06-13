@@ -29,7 +29,10 @@ This Spring Boot application is an AI based chat application built with Spring A
     - if traveled by car or bike also specify kilometers traveled (from/to) 
   - The application should expose this functionality via a REST API.
   - The application should expose this functionality using an MCP server.
-  - MCP server instructions can be found here: https://docs.spring.io/spring-ai/reference/api/mcp/mcp-server-boot-starter-docs.html and here https://piotrminkowski.com/2025/03/17/using-model-context-protocol-mcp-with-spring-ai/
+  - MCP server instructions can be found here: 
+    - https://piotrminkowski.com/2025/03/17/using-model-context-protocol-mcp-with-spring-ai/
+    - https://docs.spring.io/spring-ai/reference/api/mcp/mcp-server-boot-starter-docs.html
+  - Use Web
   - MCP example can be found here:https://www.baeldung.com/spring-ai-model-context-protocol-mcp
 - The LLM should use an MCP client for leave hours and billable client hours.
   - MCP client instructions can be found here: https://docs.spring.io/spring-ai/reference/api/mcp/mcp-client-boot-starter-docs.html

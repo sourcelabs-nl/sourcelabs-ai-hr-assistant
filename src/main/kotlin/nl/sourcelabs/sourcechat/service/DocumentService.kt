@@ -15,21 +15,33 @@ class DocumentService(
     }
     
     fun addEmployeeManualContent() {
-        // Sample employee manual content for HR assistant
-        val manualContent = listOf(
-            Document("Annual leave policy: Employees are entitled to 25 days of annual leave per year. Leave must be requested at least 2 weeks in advance through the HR system."),
-            Document("Sick leave policy: Employees can take up to 10 days of sick leave per year without a doctor's note. Extended sick leave requires medical documentation."),
-            Document("Working hours: Standard working hours are 40 hours per week, Monday to Friday 9 AM to 5 PM. Flexible working arrangements can be discussed with management."),
-            Document("Overtime policy: Overtime work must be pre-approved by management. Overtime is compensated at 1.5x regular hourly rate."),
-            Document("Remote work policy: Employees may work remotely up to 2 days per week with manager approval. Home office setup support is available."),
-            Document("Billable hours: Client-facing work must be tracked and logged daily. Billable hour targets are set quarterly by project managers."),
-            Document("Time tracking: All employees must log their hours daily in the time tracking system. Hours should be categorized by project and activity type."),
-            Document("Expense reimbursement: Business expenses can be submitted for reimbursement with proper receipts within 30 days of incurrence."),
-            Document("Training and development: Each employee has an annual training budget of €1000 for professional development courses and conferences."),
-            Document("Performance reviews: Performance reviews are conducted bi-annually in June and December. Goal setting and feedback sessions occur quarterly.")
-        )
-        
-        vectorStore.add(manualContent)
+        try {
+            val manualFile = javaClass.classLoader.getResource("employee-manual.txt")
+            if (manualFile != null) {
+                val content = manualFile.readText()
+                val sections = content.split("\n\n").filter { it.isNotBlank() }
+                val documents = sections.map { section ->
+                    Document(section.trim())
+                }
+                vectorStore.add(documents)
+            } else {
+                // Fallback content if file not found
+                val fallbackContent = listOf(
+                    Document("Annual leave policy: Employees are entitled to 25 days of annual leave per year. Leave must be requested at least 2 weeks in advance."),
+                    Document("Sick leave policy: Employees can take up to 10 days of sick leave per year. Medical certificate required for absences longer than 3 consecutive days."),
+                    Document("Billable hours policy: All client work must be accurately recorded and billed. Time should be recorded in 15-minute increments."),
+                    Document("Travel reimbursement: Mileage reimbursement €0.35 per kilometer for car travel, €0.10 per kilometer for bike travel."),
+                    Document("Working from home: Maximum 3 days per week working from home with manager approval. Company laptop provided for remote work.")
+                )
+                vectorStore.add(fallbackContent)
+            }
+        } catch (e: Exception) {
+            // Fallback in case of any errors
+            val fallbackContent = listOf(
+                Document("Employee manual content could not be loaded. Please contact HR for policy information.")
+            )
+            vectorStore.add(fallbackContent)
+        }
     }
     
     fun searchSimilarDocuments(query: String, topK: Int = 5): List<Document> {
