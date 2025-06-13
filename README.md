@@ -1,45 +1,54 @@
 # SourceChat - HR Assistant
 
-A Spring Boot AI-powered chat application built with Spring AI and Anthropic Claude, designed to assist with HR-related queries about leave hours, billable client hours, and employee manual information.
+A Spring Boot AI-powered chat application built with Spring AI and Ollama, designed to assist with HR-related queries about leave hours, billable client hours, and employee manual information.
 
 ## Features
 
-- ✅ **Anthropic Claude Integration** - Uses Claude 3.5 Sonnet for intelligent responses
+- ✅ **Ollama Integration** - Uses llama3.2 for intelligent chat responses and nomic-embed-text for embeddings
 - ✅ **Chat Memory** - Stores conversation history in PostgreSQL using Spring Data JDBC
 - ✅ **RAG (Retrieval Augmented Generation)** - Uses pgvector for similarity search on employee manual content
-- ✅ **Modern UI** - Clean chat interface accessible via web browser
-- ✅ **REST API** - RESTful endpoints for chat interactions
-- ⚠️ **MCP Support** - Model Context Protocol for hour registration system (partially implemented)
+- ✅ **React Frontend** - Modern Material UI chat interface built with TypeScript
+- ✅ **REST API** - RESTful endpoints for chat interactions and hour registration
+- ✅ **MCP Support** - Model Context Protocol server and client for hour registration tools
+- ✅ **Hour Registration** - Complete leave hours and billable hours tracking system
 
 ## Tech Stack
 
 - **Backend**: Spring Boot 3.5.0, Kotlin 1.9.25, Java 21
-- **AI**: Spring AI 1.0.0 with Anthropic Claude
+- **AI**: Spring AI 1.0.0 with Ollama (llama3.2 + nomic-embed-text)
 - **Database**: PostgreSQL with pgvector extension
 - **Data Layer**: Spring Data JDBC
-- **Frontend**: HTML/CSS/JavaScript
+- **Frontend**: React 18.2.0, TypeScript, Material UI
+- **Build**: Maven with automated frontend build
 - **Testing**: Testcontainers, JUnit 5
+- **Containerization**: Docker Compose for PostgreSQL and Ollama services
 
 ## Quick Start
 
 ### Prerequisites
 - Java 21+
 - Docker and Docker Compose
-- Anthropic API key
+- Ollama installed locally
 
-### 1. Start PostgreSQL with pgvector
+### 1. Setup Ollama Models
 ```bash
-docker-compose up -d postgres
+# Pull required models
+./setup-ollama-models.sh
 ```
 
-### 2. Configure API Key
-Update `src/main/resources/application.properties`:
-```properties
-spring.ai.anthropic.api-key=YOUR_ACTUAL_ANTHROPIC_API_KEY
+### 2. Start Docker Services
+```bash
+# Start PostgreSQL and Ollama services
+cd docker
+docker-compose up -d
 ```
 
-### 3. Run the Application
+### 3. Build and Run the Application
 ```bash
+# Build frontend and backend
+./mvnw clean package
+
+# Run the application
 ./mvnw spring-boot:run
 ```
 
@@ -54,7 +63,7 @@ POST /api/chat
 Content-Type: application/json
 
 {
-  "message": "How many leave days do I have?",
+  "message": "Register 8 hours of leave for today",
   "sessionId": "optional-session-id"
 }
 ```
@@ -69,25 +78,61 @@ GET /api/chat/history/{sessionId}
 GET /api/chat/health
 ```
 
+### Hour Registration (REST API)
+```http
+# Register leave hours
+POST /api/hours/leave
+Content-Type: application/json
+
+{
+  "employeeId": "emp123",
+  "leaveType": "ANNUAL_LEAVE",
+  "startDate": "2024-01-15",
+  "endDate": "2024-01-15",
+  "totalHours": 8,
+  "description": "Vacation day"
+}
+
+# Register billable hours
+POST /api/hours/billable
+Content-Type: application/json
+
+{
+  "employeeId": "emp123",
+  "clientName": "Acme Corp",
+  "location": "Amsterdam",
+  "workDate": "2024-01-15",
+  "hoursWorked": 8,
+  "workDescription": "Development work"
+}
+```
+
 ## Configuration
 
 Key configuration properties in `application.properties`:
 
 ```properties
-# Anthropic Claude Configuration
-spring.ai.anthropic.api-key=YOUR_API_KEY
-spring.ai.anthropic.chat.options.model=claude-3-5-sonnet-latest
-spring.ai.anthropic.chat.options.temperature=0.7
+# Ollama Chat Configuration (llama3.2 on port 1234)
+spring.ai.ollama.chat.base-url=http://localhost:1234
+spring.ai.ollama.chat.options.model=llama3.2
+spring.ai.ollama.chat.options.temperature=0.7
+
+# Ollama Embeddings Configuration (nomic-embed-text on port 11434)
+spring.ai.ollama.embedding.base-url=http://localhost:11434
+spring.ai.ollama.embedding.options.model=nomic-embed-text
 
 # PostgreSQL Database
 spring.datasource.url=jdbc:postgresql://localhost:5432/sourcechat
 spring.datasource.username=sourcechat
 spring.datasource.password=sourcechat
 
-# Vector Store (PGVector)
-spring.ai.vectorstore.pgvector.host=localhost
-spring.ai.vectorstore.pgvector.port=5432
-spring.ai.vectorstore.pgvector.database=sourcechat
+# Vector Store (PGVector) - 768 dimensions for nomic-embed-text
+spring.ai.vectorstore.pgvector.dimensions=768
+spring.ai.vectorstore.pgvector.distance-type=COSINE_DISTANCE
+
+# MCP Server Configuration
+spring.ai.mcp.server.name=sourcelabs-hr-server
+spring.ai.mcp.server.capabilities.tool=true
 ```
 
 ## Development
@@ -109,7 +154,8 @@ spring.ai.vectorstore.pgvector.database=sourcechat
 
 ### Docker Services
 ```bash
-# Start all services
+# Start all services (from docker directory)
+cd docker
 docker-compose up -d
 
 # Start with pgAdmin (optional)
@@ -119,19 +165,36 @@ docker-compose --profile dev up -d
 docker-compose down
 ```
 
+### Frontend Development
+```bash
+# Build frontend manually
+./build-frontend.sh
+
+# Frontend development (from src/main/frontend)
+cd src/main/frontend
+npm install
+npm start
+```
+
 ## Architecture
 
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Web UI        │    │  REST API       │    │  Chat Service   │
-│  (HTML/JS)      │───▶│  (Controller)   │───▶│  (Spring AI)    │
+│   React UI      │    │  REST API       │    │  Chat Service   │
+│ (Material UI)   │───▶│  (Controller)   │───▶│  (Spring AI)    │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
                                                         │
                                                         ▼
                               ┌─────────────────┐    ┌─────────────────┐
-                              │  PostgreSQL     │    │  Anthropic      │
-                              │  + pgvector     │    │  Claude API     │
-                              │  (RAG + Memory) │    │                 │
+                              │  PostgreSQL     │    │  Ollama         │
+                              │  + pgvector     │    │  llama3.2 +     │
+                              │  (RAG + Memory) │    │  nomic-embed    │
+                              └─────────────────┘    └─────────────────┘
+                                        │                       │
+                                        ▼                       ▼
+                              ┌─────────────────┐    ┌─────────────────┐
+                              │  Hour Tracking  │    │  MCP Server     │
+                              │  (Leave/Bill)   │    │  (Tools)        │
                               └─────────────────┘    └─────────────────┘
 ```
 
@@ -146,23 +209,40 @@ The application comes pre-loaded with sample HR policies including:
 - Training and development budget
 - Performance review schedule
 
+## Example Queries
+
+Once the application is running, try these example interactions:
+
+- "Register 8 hours of annual leave for today"
+- "Log 6 hours of work for client Acme Corp in Amsterdam today"
+- "How many leave days do I have left this year?"
+- "Show me my recent billable hours"
+- "What's the company policy on working from home?"
+- "Register sick leave for yesterday, 8 hours"
+
 ## Troubleshooting
 
+### Ollama Model Issues
+If chat responses fail:
+1. Ensure Ollama models are pulled: `./setup-ollama-models.sh`
+2. Verify Ollama services are running on correct ports (1234 for chat, 11434 for embeddings)
+3. Check Docker containers: `docker ps`
+
 ### Vector Store Issues
-If you encounter vector store errors, ensure:
+If you encounter vector store errors:
 1. PostgreSQL is running with pgvector extension
 2. Database connection properties are correct
-3. Vector extension is properly initialized
+3. Vector dimensions match (768 for nomic-embed-text)
 
-### API Key Issues
-- Ensure your Anthropic API key is valid
-- Check API key has sufficient credits
-- Verify network connectivity to Anthropic API
+### Frontend Build Issues
+- Run `./build-frontend.sh` manually if Maven build fails
+- Check Node.js and npm are installed for frontend development
+- Verify React dependencies in `src/main/frontend/package.json`
 
 ### Database Connection
 - Verify PostgreSQL is running on port 5432
-- Check database credentials
-- Ensure database `sourcechat` exists
+- Check database credentials in `application.properties`
+- Ensure database `sourcechat` exists with proper schema
 
 ## Contributing
 
