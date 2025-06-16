@@ -6,11 +6,7 @@ import nl.sourcelabs.sourcechat.entity.LeaveType
 import nl.sourcelabs.sourcechat.entity.TravelType
 import nl.sourcelabs.sourcechat.service.HourRegistrationService
 import org.apache.logging.log4j.LogManager
-import org.springframework.ai.tool.ToolCallbackProvider
-import org.springframework.ai.tool.method.MethodToolCallbackProvider
 import org.springframework.ai.tool.annotation.Tool
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
 import org.springframework.stereotype.Service
 import java.time.LocalDate
 
@@ -20,7 +16,7 @@ class HourRegistrationMcpService(
 ) {
 
     private val logger = LogManager.getLogger()
-
+    
     @Tool(description = "Register leave hours for an employee")
     fun registerLeaveHours(
         employeeId: String,
@@ -31,7 +27,7 @@ class HourRegistrationMcpService(
         description: String? = null
     ): String {
         logger.info("MCP Tool: registerLeaveHours called - employeeId: {}, leaveType: {}, startDate: {}, totalHours: {}", 
-            employeeId, leaveType, startDate, totalHours)
+                   employeeId, leaveType, startDate, totalHours)
         return try {
             val request = RegisterLeaveHoursRequest(
                 employeeId = employeeId,
@@ -42,14 +38,13 @@ class HourRegistrationMcpService(
                 description = description
             )
             
-            val response = hourRegistrationService.registerLeaveHours(request)
-            val result = "✅ ${response.message}"
+            val result = hourRegistrationService.registerLeaveHours(request).message
             logger.info("MCP Tool: registerLeaveHours completed successfully - employeeId: {}", employeeId)
-            result
+            "✅ $result"
         } catch (e: Exception) {
-            val result = "❌ Error registering leave hours: ${e.message}"
+            val errorMessage = "Error in registerLeaveHours: ${e.message}"
             logger.error("MCP Tool: registerLeaveHours failed - employeeId: {}, error: {}", employeeId, e.message, e)
-            result
+            "❌ $errorMessage"
         }
     }
 
@@ -68,8 +63,8 @@ class HourRegistrationMcpService(
         travelToLocation: String? = null,
         hourlyRate: Double? = null
     ): String {
-        logger.info("MCP Tool: registerBillableHours called - employeeId: {}, client: {}, workDate: {}, hours: {}", 
-            employeeId, clientName, workDate, hoursWorked)
+        logger.info("MCP Tool: registerBillableHours called - employeeId: {}, clientName: {}, workDate: {}, hoursWorked: {}", 
+                   employeeId, clientName, workDate, hoursWorked)
         return try {
             val request = RegisterBillableHoursRequest(
                 employeeId = employeeId,
@@ -86,14 +81,13 @@ class HourRegistrationMcpService(
                 hourlyRate = hourlyRate
             )
             
-            val response = hourRegistrationService.registerBillableHours(request)
-            val result = "✅ ${response.message}"
-            logger.info("MCP Tool: registerBillableHours completed successfully - employeeId: {}, client: {}", employeeId, clientName)
-            result
+            val result = hourRegistrationService.registerBillableHours(request).message
+            logger.info("MCP Tool: registerBillableHours completed successfully - employeeId: {}", employeeId)
+            "✅ $result"
         } catch (e: Exception) {
-            val result = "❌ Error registering billable hours: ${e.message}"
-            logger.error("MCP Tool: registerBillableHours failed - employeeId: {}, client: {}, error: {}", employeeId, clientName, e.message, e)
-            result
+            val errorMessage = "Error in registerBillableHours: ${e.message}"
+            logger.error("MCP Tool: registerBillableHours failed - employeeId: {}, error: {}", employeeId, e.message, e)
+            "❌ $errorMessage"
         }
     }
 
@@ -169,16 +163,5 @@ class HourRegistrationMcpService(
             logger.error("MCP Tool: getBillableHistory failed - employeeId: {}, error: {}", employeeId, e.message, e)
             result
         }
-    }
-}
-
-@Configuration
-class McpServerConfig {
-
-    @Bean
-    fun hourRegistrationToolCallbackProvider(hourRegistrationMcpService: HourRegistrationMcpService): ToolCallbackProvider {
-        return MethodToolCallbackProvider.builder()
-            .toolObjects(hourRegistrationMcpService)
-            .build()
     }
 }
