@@ -13,6 +13,7 @@ SourceChat is a fully-functional Spring Boot 3.5.0 HR assistant application buil
 - **Hour Registration**: Leave hours and billable client hours with full CRUD operations
 - **MCP Integration**: Server/client architecture for tool callbacks
 - **RAG System**: PostgreSQL vector store with employee manual content
+- **Chat Memory**: MessageChatMemoryAdvisor with 20-message window for conversation continuity
 - **React Frontend**: Material UI chat interface with TypeScript
 - **Database Schema**: PostgreSQL with pgvector extension
 - **Docker Setup**: Multi-service composition with health checks
@@ -31,6 +32,7 @@ SourceChat is a fully-functional Spring Boot 3.5.0 HR assistant application buil
 - **Embeddings**: Ollama nomic-embed-text (localhost:11434)
 - **Vector Store**: PostgreSQL pgvector with 768-dimensional embeddings
 - **RAG**: Employee manual content for context
+- **Memory**: MessageWindowChatMemory with 20-message sliding window
 
 **Frontend Stack:**
 - React 18.2.0 with TypeScript 4.9.4
@@ -96,7 +98,7 @@ docker exec sourcechat-ollama-embeddings ollama pull nomic-embed-text
 - Natural language hour registration
 - Employee manual queries with RAG
 - Tool-based hour registration and retrieval
-- Session-based chat memory
+- Session-based chat memory with automatic conversation continuity
 
 **Hour Registration System:**
 - Leave hours: Types, dates, approval workflow

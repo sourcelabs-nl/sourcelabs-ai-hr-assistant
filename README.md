@@ -5,7 +5,7 @@ A Spring Boot AI-powered chat application built with Spring AI and Ollama, desig
 ## Features
 
 - ✅ **Ollama Integration** - Uses llama3.2 for intelligent chat responses and nomic-embed-text for embeddings
-- ✅ **Chat Memory** - Stores conversation history in PostgreSQL using Spring Data JDBC
+- ✅ **Chat Memory** - MessageChatMemoryAdvisor with 20-message sliding window for conversation continuity
 - ✅ **RAG (Retrieval Augmented Generation)** - Uses pgvector for similarity search on employee manual content
 - ✅ **React Frontend** - Modern Material UI chat interface built with TypeScript
 - ✅ **REST API** - RESTful endpoints for chat interactions and hour registration
@@ -188,15 +188,35 @@ npm start
                               ┌─────────────────┐    ┌─────────────────┐
                               │  PostgreSQL     │    │  Ollama         │
                               │  + pgvector     │    │  llama3.2 +     │
-                              │  (RAG + Memory) │    │  nomic-embed    │
+                              │  (RAG Storage)  │    │  nomic-embed    │
                               └─────────────────┘    └─────────────────┘
                                         │                       │
                                         ▼                       ▼
                               ┌─────────────────┐    ┌─────────────────┐
-                              │  Hour Tracking  │    │  MCP Server     │
-                              │  (Leave/Bill)   │    │  (Tools)        │
+                              │  Hour Tracking  │    │  Memory Store   │
+                              │  (Leave/Bill)   │    │  (20 Messages)  │
+                              └─────────────────┘    └─────────────────┘
+                                        │                       │
+                                        ▼                       ▼
+                              ┌─────────────────┐    ┌─────────────────┐
+                              │  MCP Tools      │    │  Chat Memory    │
+                              │  (Registration) │    │  (Per Session)  │
                               └─────────────────┘    └─────────────────┘
 ```
+
+## Chat Memory & Conversation Continuity
+
+The application uses Spring AI's `MessageChatMemoryAdvisor` to maintain conversation context:
+
+- **Sliding Window**: Retains last 20 messages per conversation session
+- **Session-based**: Each chat session has isolated memory using sessionId
+- **Automatic Management**: Spring AI handles message retrieval and context injection
+- **Combined with RAG**: Memory works alongside document search for comprehensive responses
+
+This ensures the HR assistant remembers previous interactions within a session, providing contextual responses like:
+- "You mentioned earlier..." 
+- "Based on your previous request..."
+- "Following up on the leave hours you registered..."
 
 ## Employee Manual Content
 
