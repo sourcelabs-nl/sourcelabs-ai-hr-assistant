@@ -14,6 +14,8 @@ SourceChat is a fully-functional Spring Boot 3.5.0 HR assistant application buil
 - **MCP Integration**: Server/client architecture for tool callbacks
 - **RAG System**: PostgreSQL vector store with employee manual content
 - **Chat Memory**: MessageChatMemoryAdvisor with 20-message window for conversation continuity
+- **Comprehensive Logging**: Structured logging throughout application flow with observability
+- **Exception Handling**: Centralized GlobalExceptionHandler with ProblemDetail responses
 - **React Frontend**: Material UI chat interface with TypeScript
 - **Database Schema**: PostgreSQL with pgvector extension
 - **Docker Setup**: Multi-service composition with health checks
@@ -26,6 +28,8 @@ SourceChat is a fully-functional Spring Boot 3.5.0 HR assistant application buil
 - PostgreSQL with pgvector for vector storage
 - Spring Data JDBC for database operations
 - MCP (Model Context Protocol) for tool integration
+- Log4j2 for structured logging and observability
+- ProblemDetail (RFC 7807) for standardized error responses
 
 **AI Stack:**
 - **Chat Model**: Ollama llama3.2 (localhost:1234)
@@ -120,10 +124,13 @@ docker exec sourcechat-ollama-embeddings ollama pull nomic-embed-text
 ## Implementation Details
 
 **Key Source Files:**
-- `src/main/kotlin/nl/sourcelabs/sourcechat/config/ChatConfig.kt`: Chat client configuration
-- `src/main/kotlin/nl/sourcelabs/sourcechat/service/ChatService.kt`: Chat service with RAG
-- `src/main/kotlin/nl/sourcelabs/sourcechat/mcp/McpServerConfig.kt`: MCP tools configuration
-- `src/main/kotlin/nl/sourcelabs/sourcechat/controller/ChatController.kt`: REST API endpoints
+- `src/main/kotlin/nl/sourcelabs/sourcechat/config/ChatConfig.kt`: Chat client configuration with MessageChatMemoryAdvisor
+- `src/main/kotlin/nl/sourcelabs/sourcechat/service/ChatService.kt`: Chat service with RAG and comprehensive logging
+- `src/main/kotlin/nl/sourcelabs/sourcechat/service/DocumentService.kt`: Vector store operations with logging
+- `src/main/kotlin/nl/sourcelabs/sourcechat/mcp/McpServerConfig.kt`: MCP tools with execution logging
+- `src/main/kotlin/nl/sourcelabs/sourcechat/controller/ChatController.kt`: REST API endpoints with request logging
+- `src/main/kotlin/nl/sourcelabs/sourcechat/controller/HourRegistrationController.kt`: Hour registration API with logging
+- `src/main/kotlin/nl/sourcelabs/sourcechat/exception/GlobalExceptionHandler.kt`: Centralized exception handling with ProblemDetail
 - `src/main/resources/schema.sql`: Database schema with vector_store table
 - `frontend/src/components/ChatInterface.tsx`: React chat UI component
 
@@ -143,6 +150,32 @@ docker exec sourcechat-ollama-embeddings ollama pull nomic-embed-text
 - "Log 6 billable hours for ClientABC at Amsterdam office on 2025-06-13"
 - "Show me my leave history for employee123"
 - "How many billable hours did employee123 log this year?"
+
+## Logging and Observability
+
+**Comprehensive Logging Coverage:**
+- **Chat Processing**: Session tracking, RAG search results, AI model calls, response metrics
+- **MCP Tool Execution**: All 6 tools with input parameters, success/failure tracking, execution context
+- **REST API Operations**: Request/response logging with key parameters (sessionId, employeeId, operation type)
+- **Vector Store Operations**: Document searches, embedding operations, result counts
+- **Database Operations**: Message persistence, hour registration, query execution
+
+**Log Levels and Context:**
+- **INFO**: Normal operation flow, key business events, performance metrics
+- **WARN**: Recoverable issues, fallback usage, null responses  
+- **ERROR**: Exceptions with full stack traces, operation failures, system errors
+
+**Structured Logging Format:**
+- Consistent parameter logging with `{}` placeholders
+- Operation context (sessionId, employeeId, client names)
+- Timing and volume metrics (response length, document counts)
+- Clear component prefixes (`REST API:`, `MCP Tool:`, `RAG search:`)
+
+**Exception Handling:**
+- **GlobalExceptionHandler**: Centralized error handling with `@ControllerAdvice`
+- **ProblemDetail Responses**: RFC 7807 compliant error format with structured details
+- **Error Context**: Timestamp, path, status code, and descriptive messages
+- **Exception Mapping**: Specific handlers for IllegalArgumentException, NoSuchElementException, RuntimeException
 
 # Considerations
 

@@ -20,6 +20,8 @@ A Spring Boot AI-powered chat application built with Spring AI and Ollama, desig
 - **Data Layer**: Spring Data JDBC
 - **Frontend**: React 18.2.0, TypeScript, Material UI
 - **Build**: Maven with automated frontend build
+- **Logging**: Log4j2 with structured logging throughout application flow
+- **Error Handling**: GlobalExceptionHandler with ProblemDetail (RFC 7807) responses
 - **Testing**: Testcontainers, JUnit 5
 - **Containerization**: Docker Compose for PostgreSQL and Ollama services
 
@@ -263,6 +265,31 @@ If you encounter vector store errors:
 - Verify PostgreSQL is running on port 5432
 - Check database credentials in `application.properties`
 - Ensure database `sourcechat` exists with proper schema
+
+### Logging and Debugging
+The application provides comprehensive logging for troubleshooting:
+
+**Log Locations:**
+- Application logs: Standard output with structured format
+- Log levels: INFO (normal flow), WARN (recoverable issues), ERROR (exceptions)
+
+**Key Log Messages:**
+- `Starting chat processing - sessionId: {}, message: '{}'` - Chat requests
+- `MCP Tool: {toolName} called - employeeId: {}, ...` - Tool executions  
+- `REST API: {operation} request - {parameters}` - API calls
+- `RAG search completed - found {} documents` - Vector searches
+
+**Error Response Format:**
+```json
+{
+  "type": "about:blank",
+  "title": "Bad Request", 
+  "status": 400,
+  "detail": "Invalid request parameters",
+  "timestamp": "2025-06-16T10:00:00Z",
+  "path": "/api/chat"
+}
+```
 
 ## Contributing
 
