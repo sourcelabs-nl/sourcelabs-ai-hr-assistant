@@ -3,6 +3,7 @@ package nl.sourcelabs.sourcechat.service
 import nl.sourcelabs.sourcechat.dto.ChatRequest
 import nl.sourcelabs.sourcechat.dto.ChatResponse
 import nl.sourcelabs.sourcechat.entity.ChatMessage
+import nl.sourcelabs.sourcechat.exception.ChatServiceException
 import nl.sourcelabs.sourcechat.repository.ChatMessageRepository
 import org.apache.logging.log4j.LogManager
 import org.springframework.ai.chat.client.ChatClient
@@ -16,90 +17,103 @@ class ChatService(
     private val chatMessageRepository: ChatMessageRepository,
     private val documentService: DocumentService
 ) {
-
-    private val logger = LogManager.getLogger()
+    
+    companion object {
+        private val logger = LogManager.getLogger(ChatService::class.java)
+        private const val MAX_MESSAGE_PREVIEW = 100
+        private const val DEFAULT_RAG_TOP_K = 3
+    }
     
     fun chat(request: ChatRequest): ChatResponse {
-        val sessionId = request.sessionId ?: UUID.randomUUID().toString()
-        logger.info("Starting chat processing - sessionId: {}, message: '{}'", sessionId, request.message.take(100))
+        val sessionId = request.sessionId ?: generateSessionId()
+        logger.info("Processing chat - sessionId: {}, message: '{}'", 
+            sessionId, request.message.take(MAX_MESSAGE_PREVIEW))
         
-        try {
-            // Save user message
-            val userMessage = ChatMessage(
-                sessionId = sessionId,
-                role = "user",
-                content = request.message
-            )
-            chatMessageRepository.save(userMessage)
-            logger.info("Saved user message to database - sessionId: {}", sessionId)
+        return try {
+            val userMessage = saveUserMessage(request, sessionId)
+            val aiResponse = generateAiResponse(request, sessionId)
+            saveAssistantMessage(aiResponse, sessionId)
             
-            // Search for relevant documents using RAG
-            val relevantDocs = documentService.searchSimilarDocuments(request.message, topK = 3)
-            logger.info("RAG search completed - sessionId: {}, found {} relevant documents", sessionId, relevantDocs.size)
-            
-            val contextFromDocs = if (relevantDocs.isNotEmpty()) {
-                "Relevant information from employee manual:\n" + 
-                relevantDocs.joinToString("\n") { "Reference: ${it.text}" } + "\n\n"
-            } else ""
-            
-            // Build user message with RAG context
-            val userMessageWithContext = buildString {
-                append(contextFromDocs)
-                append("User question: ${request.message}")
-            }
-            
-            // Call AI model with memory advisor
-            logger.info("Calling AI model - sessionId: {}, using MessageChatMemoryAdvisor", sessionId)
-            val aiResponse = try {
-                chatClient.prompt()
-                    .advisors { advisorSpec -> 
-                        advisorSpec.param(ChatMemory.CONVERSATION_ID, sessionId)
-                    }
-                    .user(userMessageWithContext)
-                    .call()
-                    .content() ?: run {
-                        logger.warn("AI model returned null content - sessionId: {}", sessionId)
-                        "I apologize, but I'm unable to provide a response at the moment. Please try again."
-                    }
-            } catch (e: Exception) {
-                logger.error("AI model call failed - sessionId: {}, error: {}", sessionId, e.message, e)
-                throw e
-            }
-            
-            logger.info("AI response received - sessionId: {}, responseLength: {}", sessionId, aiResponse.length)
-
-            // Save assistant response
-            val assistantMessage = ChatMessage(
-                sessionId = sessionId,
-                role = "assistant",
-                content = aiResponse
-            )
-            chatMessageRepository.save(assistantMessage)
-            logger.info("Saved assistant message to database - sessionId: {}", sessionId)
-            
-            val response = ChatResponse(
-                message = aiResponse,
-                sessionId = sessionId
-            )
-            
-            logger.info("Chat processing completed successfully - sessionId: {}", sessionId)
-            return response
-            
+            ChatResponse(message = aiResponse, sessionId = sessionId)
+                .also { logger.info("Chat completed - sessionId: {}", sessionId) }
         } catch (e: Exception) {
-            logger.error("Chat processing failed - sessionId: {}, error: {}", sessionId, e.message, e)
-            throw e
+            logger.error("Chat failed - sessionId: {}", sessionId, e)
+            throw ChatServiceException("Failed to process chat request", e)
+        }
+    }
+    
+    private fun generateSessionId(): String = UUID.randomUUID().toString()
+    
+    private fun saveUserMessage(request: ChatRequest, sessionId: String): ChatMessage {
+        return ChatMessage(
+            sessionId = sessionId,
+            role = MessageRole.USER.value,
+            content = request.message
+        ).let { message ->
+            chatMessageRepository.save(message)
+                .also { logger.debug("User message saved - sessionId: {}", sessionId) }
+        }
+    }
+    
+    private fun generateAiResponse(request: ChatRequest, sessionId: String): String {
+        val contextualMessage = buildContextualMessage(request.message)
+        
+        return try {
+            chatClient.prompt()
+                .advisors { advisorSpec -> 
+                    advisorSpec.param(ChatMemory.CONVERSATION_ID, sessionId)
+                }
+                .user(contextualMessage)
+                .call()
+                .content()
+                ?: throw ChatServiceException("AI model returned null response")
+        } catch (e: Exception) {
+            logger.error("AI model call failed - sessionId: {}", sessionId, e)
+            throw ChatServiceException("AI service unavailable", e)
+        }
+    }
+    
+    private fun buildContextualMessage(message: String): String {
+        val relevantDocs = documentService.searchSimilarDocuments(message, DEFAULT_RAG_TOP_K)
+        logger.debug("RAG search found {} relevant documents", relevantDocs.size)
+        
+        return buildString {
+            if (relevantDocs.isNotEmpty()) {
+                appendLine("Relevant information from employee manual:")
+                relevantDocs.forEach { doc ->
+                    appendLine("Reference: ${doc.text}")
+                }
+                appendLine()
+            }
+            append("User question: $message")
+        }
+    }
+    
+    private fun saveAssistantMessage(aiResponse: String, sessionId: String): ChatMessage {
+        return ChatMessage(
+            sessionId = sessionId,
+            role = MessageRole.ASSISTANT.value,
+            content = aiResponse
+        ).let { message ->
+            chatMessageRepository.save(message)
+                .also { logger.debug("Assistant message saved - sessionId: {}", sessionId) }
         }
     }
     
     fun getChatHistory(sessionId: String): List<ChatMessage> {
         logger.info("Retrieving chat history - sessionId: {}", sessionId)
-        try {
+        return try {
             val history = chatMessageRepository.findBySessionIdOrderByTimestampAsc(sessionId)
-            logger.info("Chat history retrieved - sessionId: {}, messageCount: {}", sessionId, history.size)
-            return history
+            logger.info("Chat history retrieved - sessionId: {}, count: {}", sessionId, history.size)
+            history
         } catch (e: Exception) {
-            logger.error("Failed to retrieve chat history - sessionId: {}, error: {}", sessionId, e.message, e)
-            throw e
+            logger.error("Failed to retrieve chat history - sessionId: {}", sessionId, e)
+            throw ChatServiceException("Failed to retrieve chat history", e)
         }
     }
+}
+
+enum class MessageRole(val value: String) {
+    USER("user"),
+    ASSISTANT("assistant")
 }

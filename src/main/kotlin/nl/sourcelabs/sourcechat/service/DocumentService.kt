@@ -11,7 +11,9 @@ class DocumentService(
     private val vectorStore: VectorStore
 ) {
     
-    private val logger = LogManager.getLogger()
+    companion object {
+        private val logger = LogManager.getLogger(DocumentService::class.java)
+    }
     
     fun addDocuments(documents: List<Document>) {
         logger.info("Adding {} documents to vector store", documents.size)

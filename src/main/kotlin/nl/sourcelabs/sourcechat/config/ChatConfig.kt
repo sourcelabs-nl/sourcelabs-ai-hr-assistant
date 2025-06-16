@@ -1,5 +1,6 @@
 package nl.sourcelabs.sourcechat.config
 
+import org.apache.logging.log4j.LogManager
 import org.springframework.ai.chat.client.ChatClient
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor
 import org.springframework.ai.chat.memory.ChatMemory
@@ -7,16 +8,29 @@ import org.springframework.ai.chat.memory.MessageWindowChatMemory
 import org.springframework.ai.chat.model.ChatModel
 import org.springframework.ai.tool.ToolCallbackProvider
 import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.core.io.Resource
 
 @Configuration
 class ChatConfig {
     
+    companion object {
+        private val logger = LogManager.getLogger(ChatConfig::class.java)
+    }
+    
+    @Value("\${app.chat.memory.max-messages:20}")
+    private val maxMessages: Int = 20
+    
+    @Value("\${app.chat.system-prompt-file:classpath:system-prompt.txt}")
+    private val systemPromptResource: Resource? = null
+    
     @Bean
     fun chatMemory(): ChatMemory {
+        logger.info("Creating chat memory with max messages: {}", maxMessages)
         return MessageWindowChatMemory.builder()
-            .maxMessages(20)
+            .maxMessages(maxMessages)
             .build()
     }
     
@@ -26,28 +40,33 @@ class ChatConfig {
         hourRegistrationToolCallbackProvider: ToolCallbackProvider,
         chatMemory: ChatMemory
     ): ChatClient {
+        val systemPrompt = loadSystemPrompt()
+        logger.info("Creating chat client with system prompt loaded from: {}", 
+            systemPromptResource?.description ?: "default")
+        
         return ChatClient.builder(chatModel)
-            .defaultSystem("""
-                You are the Sourcelabs HR assistant. You provide information about leave hours, billable client hours and the employee manual.
-                
-                You have access to tools that allow you to directly register hours and retrieve hour summaries for employees. When users ask to register hours or get information about their hours, use the available tools to help them.
-                
-                Available tools:
-                - registerLeaveHours: Register leave hours for an employee
-                - registerBillableHours: Register billable client hours for an employee  
-                - getLeaveHoursSummary: Get total leave hours for an employee in a specific year
-                - getBillableHoursSummary: Get total billable hours for an employee in a specific year
-                - getLeaveHistory: Get recent leave history for an employee
-                - getBillableHistory: Get recent billable hours history for an employee
-                
-                For leave hours registration, you need: employee ID, leave type (ANNUAL_LEAVE, SICK_LEAVE, PERSONAL_LEAVE, MATERNITY_LEAVE, PATERNITY_LEAVE, BEREAVEMENT_LEAVE, OTHER), start date (YYYY-MM-DD), end date (YYYY-MM-DD), total hours, and optional description.
-                For billable hours registration, you need: employee ID, client name, location, work date (YYYY-MM-DD), hours worked, and work description. Travel information is optional.
-                
-                Use today's date as reference when users say "today", "yesterday", etc.
-                Be helpful and guide users through the process step by step. Always use the tools to complete hour registration requests.
-            """.trimIndent())
+            .defaultSystem(systemPrompt)
             .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
             .defaultToolCallbacks(hourRegistrationToolCallbackProvider)
             .build()
     }
+    
+    private fun loadSystemPrompt(): String {
+        return try {
+            systemPromptResource?.inputStream?.bufferedReader()?.use { it.readText() }
+                ?: getDefaultSystemPrompt()
+        } catch (e: Exception) {
+            logger.warn("Failed to load system prompt from file, using default: {}", e.message)
+            getDefaultSystemPrompt()
+        }
+    }
+    
+    private fun getDefaultSystemPrompt(): String = """
+        You are the Sourcelabs HR assistant. You provide information about leave hours, billable client hours and the employee manual.
+        
+        You have access to tools that allow you to directly register hours and retrieve hour summaries for employees. When users ask to register hours or get information about their hours, use the available tools to help them.
+        
+        Use today's date as reference when users say "today", "yesterday", etc.
+        Be helpful and guide users through the process step by step. Always use the tools to complete hour registration requests.
+    """.trimIndent()
 }

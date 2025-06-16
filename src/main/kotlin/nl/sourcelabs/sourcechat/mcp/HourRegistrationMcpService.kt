@@ -15,7 +15,9 @@ class HourRegistrationMcpService(
     private val hourRegistrationService: HourRegistrationService
 ) {
 
-    private val logger = LogManager.getLogger()
+    companion object {
+        private val logger = LogManager.getLogger(HourRegistrationMcpService::class.java)
+    }
     
     @Tool(description = "Register leave hours for an employee")
     fun registerLeaveHours(
