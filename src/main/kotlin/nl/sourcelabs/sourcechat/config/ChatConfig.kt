@@ -1,6 +1,9 @@
 package nl.sourcelabs.sourcechat.config
 
 import org.springframework.ai.chat.client.ChatClient
+import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor
+import org.springframework.ai.chat.memory.ChatMemory
+import org.springframework.ai.chat.memory.MessageWindowChatMemory
 import org.springframework.ai.chat.model.ChatModel
 import org.springframework.ai.tool.ToolCallbackProvider
 import org.springframework.beans.factory.annotation.Qualifier
@@ -11,9 +14,17 @@ import org.springframework.context.annotation.Configuration
 class ChatConfig {
     
     @Bean
+    fun chatMemory(): ChatMemory {
+        return MessageWindowChatMemory.builder()
+            .maxMessages(20)
+            .build()
+    }
+    
+    @Bean
     fun chatClient(
         @Qualifier("ollamaChatModel") chatModel: ChatModel,
-        hourRegistrationToolCallbackProvider: ToolCallbackProvider
+        hourRegistrationToolCallbackProvider: ToolCallbackProvider,
+        chatMemory: ChatMemory
     ): ChatClient {
         return ChatClient.builder(chatModel)
             .defaultSystem("""
@@ -35,6 +46,7 @@ class ChatConfig {
                 Use today's date as reference when users say "today", "yesterday", etc.
                 Be helpful and guide users through the process step by step. Always use the tools to complete hour registration requests.
             """.trimIndent())
+            .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
             .defaultToolCallbacks(hourRegistrationToolCallbackProvider)
             .build()
     }

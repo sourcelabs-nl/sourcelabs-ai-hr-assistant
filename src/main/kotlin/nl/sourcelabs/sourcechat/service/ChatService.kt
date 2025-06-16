@@ -6,6 +6,7 @@ import nl.sourcelabs.sourcechat.entity.ChatMessage
 import nl.sourcelabs.sourcechat.repository.ChatMessageRepository
 import org.apache.logging.log4j.LogManager
 import org.springframework.ai.chat.client.ChatClient
+import org.springframework.ai.chat.memory.ChatMemory
 import org.springframework.stereotype.Service
 import java.util.*
 
@@ -29,37 +30,27 @@ class ChatService(
         )
         chatMessageRepository.save(userMessage)
         
-        // Get chat history for context
-        val chatHistory = chatMessageRepository.findTop10BySessionIdOrderByTimestampDesc(sessionId)
-            .reversed() // Get chronological order
-        
         // Search for relevant documents using RAG
         val relevantDocs = documentService.searchSimilarDocuments(request.message, topK = 3)
-        val contextFromDocs = relevantDocs.joinToString("\n") { "Reference: ${it.text}" }
+        val contextFromDocs = if (relevantDocs.isNotEmpty()) {
+            "Relevant information from employee manual:\n" + 
+            relevantDocs.joinToString("\n") { "Reference: ${it.text}" } + "\n\n"
+        } else ""
         
-        // Build conversation context for AI
-        val conversationHistory = buildString {
-            if (relevantDocs.isNotEmpty()) {
-                append("Relevant information from employee manual:\n")
-                append(contextFromDocs)
-                append("\n\n")
-            }
-            
-            if (chatHistory.isNotEmpty()) {
-                append("Previous conversation:\n")
-                chatHistory.forEach { message ->
-                    append("${message.role}: ${message.content}\n")
-                }
-                append("\n")
-            }
-            append("Current user message: ${request.message}")
+        // Build user message with RAG context
+        val userMessageWithContext = buildString {
+            append(contextFromDocs)
+            append("User question: ${request.message}")
         }
         
         val aiResponse = try {
             chatClient.prompt()
-                .user(conversationHistory)
+                .advisors { advisorSpec -> 
+                    advisorSpec.param(ChatMemory.CONVERSATION_ID, sessionId)
+                }
+                .user(userMessageWithContext)
                 .call()
-               .content() ?: "I apologize, but I'm unable to provide a response at the moment. Please try again."
+                .content() ?: "I apologize, but I'm unable to provide a response at the moment. Please try again."
         } catch (e: Exception) {
             logger.warn(e)
             throw e
