@@ -10,14 +10,17 @@ SourceChat is a fully-functional Spring Boot 3.5.0 HR assistant application buil
 
 ✅ **COMPLETED FEATURES:**
 - **AI Chat System**: Ollama llama3.2 for chat, nomic-embed-text for embeddings
-- **Hour Registration**: Leave hours and billable client hours with full CRUD operations
-- **MCP Integration**: Server/client architecture for tool callbacks
-- **RAG System**: PostgreSQL vector store with employee manual content
-- **Chat Memory**: MessageChatMemoryAdvisor with 20-message window for conversation continuity
-- **Comprehensive Logging**: Structured logging throughout application flow with observability
-- **Exception Handling**: Centralized GlobalExceptionHandler with ProblemDetail responses
+- **Hour Registration**: Leave hours and billable client hours with full CRUD operations and validation
+- **MCP Integration**: Server/client architecture for tool callbacks with structured error handling
+- **RAG System**: PostgreSQL vector store with employee manual content and error recovery
+- **Chat Memory**: MessageChatMemoryAdvisor with configurable message window for conversation continuity
+- **Input Validation**: Jakarta Bean Validation with comprehensive constraints and business logic validation
+- **Exception Handling**: Centralized GlobalExceptionHandler with RFC 7807 ProblemDetail responses and specific exception types
+- **Security & Configuration**: CORS configuration, input sanitization, externalized settings with environment support
+- **Comprehensive Logging**: Structured logging with consistent patterns and companion objects throughout application
+- **Code Quality**: Kotlin idiomatic patterns, transactional service layer, extension functions for clean conversions
 - **React Frontend**: Material UI chat interface with TypeScript
-- **Database Schema**: PostgreSQL with pgvector extension
+- **Database Schema**: PostgreSQL with pgvector extension and proper transaction boundaries
 - **Docker Setup**: Multi-service composition with health checks
 
 ## Architecture
@@ -124,13 +127,19 @@ docker exec sourcechat-ollama-embeddings ollama pull nomic-embed-text
 ## Implementation Details
 
 **Key Source Files:**
-- `src/main/kotlin/nl/sourcelabs/sourcechat/config/ChatConfig.kt`: Chat client configuration with MessageChatMemoryAdvisor
-- `src/main/kotlin/nl/sourcelabs/sourcechat/service/ChatService.kt`: Chat service with RAG and comprehensive logging
-- `src/main/kotlin/nl/sourcelabs/sourcechat/service/DocumentService.kt`: Vector store operations with logging
-- `src/main/kotlin/nl/sourcelabs/sourcechat/mcp/McpServerConfig.kt`: MCP tools with execution logging
-- `src/main/kotlin/nl/sourcelabs/sourcechat/controller/ChatController.kt`: REST API endpoints with request logging
-- `src/main/kotlin/nl/sourcelabs/sourcechat/controller/HourRegistrationController.kt`: Hour registration API with logging
-- `src/main/kotlin/nl/sourcelabs/sourcechat/exception/GlobalExceptionHandler.kt`: Centralized exception handling with ProblemDetail
+- `src/main/kotlin/nl/sourcelabs/sourcechat/config/ChatConfig.kt`: Chat client configuration with externalized settings and system prompt loading
+- `src/main/kotlin/nl/sourcelabs/sourcechat/service/ChatService.kt`: Chat service with structured validation, specific exceptions, and modular design
+- `src/main/kotlin/nl/sourcelabs/sourcechat/service/HourRegistrationService.kt`: Transactional hour registration with business validation and extension functions
+- `src/main/kotlin/nl/sourcelabs/sourcechat/service/DocumentService.kt`: Vector store operations with comprehensive error handling
+- `src/main/kotlin/nl/sourcelabs/sourcechat/mcp/HourRegistrationMcpService.kt`: MCP tools with input validation and structured error responses
+- `src/main/kotlin/nl/sourcelabs/sourcechat/mcp/McpConfiguration.kt`: Separated MCP configuration beans
+- `src/main/kotlin/nl/sourcelabs/sourcechat/controller/ChatController.kt`: REST API with comprehensive input validation and security
+- `src/main/kotlin/nl/sourcelabs/sourcechat/controller/HourRegistrationController.kt`: Hour registration API with path validation and CORS configuration
+- `src/main/kotlin/nl/sourcelabs/sourcechat/dto/ChatRequest.kt`: Request DTOs with Jakarta Bean Validation annotations
+- `src/main/kotlin/nl/sourcelabs/sourcechat/dto/HourRegistrationDtos.kt`: Hour registration DTOs with comprehensive validation constraints
+- `src/main/kotlin/nl/sourcelabs/sourcechat/exception/GlobalExceptionHandler.kt`: Enhanced exception handling with validation error support
+- `src/main/kotlin/nl/sourcelabs/sourcechat/exception/ServiceExceptions.kt`: Specific exception hierarchy for different service domains
+- `src/main/resources/system-prompt.txt`: Externalized system prompt for maintainability
 - `src/main/resources/schema.sql`: Database schema with vector_store table
 - `frontend/src/components/ChatInterface.tsx`: React chat UI component
 
@@ -177,6 +186,46 @@ docker exec sourcechat-ollama-embeddings ollama pull nomic-embed-text
 - **Error Context**: Timestamp, path, status code, and descriptive messages
 - **Exception Mapping**: Specific handlers for IllegalArgumentException, NoSuchElementException, RuntimeException
 
+# Code Quality Standards
+
+The codebase follows these quality standards implemented throughout the application:
+
+## Input Validation
+- All DTOs use Jakarta Bean Validation annotations (`@NotBlank`, `@Size`, `@Pattern`, etc.)
+- Controllers use `@Valid` annotations for request validation
+- Path variables are validated with regex patterns for security
+- Business logic validation is implemented in service layers
+
+## Exception Handling
+- Specific exception classes for different domains (`ChatServiceException`, `HourRegistrationException`, etc.)
+- `GlobalExceptionHandler` provides RFC 7807 compliant error responses
+- Structured error logging with appropriate log levels
+- Validation errors include field-specific error messages
+
+## Configuration Management
+- Application settings externalized to `application.properties`
+- Environment-specific configuration support
+- Configurable CORS origins, chat memory settings, and system prompts
+- Proper resource loading with fallback mechanisms
+
+## Security Features
+- CORS configuration with environment-specific allowed origins
+- Input sanitization and validation at multiple layers
+- Path variable validation to prevent injection attacks
+- Proper session ID format validation
+
+## Service Layer Standards
+- `@Transactional` annotations for proper transaction boundaries
+- Companion objects for consistent logger initialization
+- Extension functions for clean entity conversions
+- Comprehensive business validation beyond input constraints
+
+## Logging Standards
+- Structured logging with consistent patterns across all classes
+- Appropriate log levels (INFO for normal flow, WARN for recoverable issues, ERROR for exceptions)
+- Contextual information in log messages (sessionId, employeeId, etc.)
+- Companion objects for logger initialization: `private val logger = LogManager.getLogger(ClassName::class.java)`
+
 # Considerations
 
 - Whenever in doubt, ask the user for input.
@@ -184,6 +233,9 @@ docker exec sourcechat-ollama-embeddings ollama pull nomic-embed-text
 - When you complete a task 
   - check if code compiles 
   - check if application runs
+  - ensure all validation annotations are properly applied
+  - verify error handling follows established patterns
+  - confirm logging follows consistent standards
   - create a commit with the message "feat: <description of the feature>".
 
 ## Key Technologies
