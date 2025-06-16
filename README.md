@@ -355,6 +355,14 @@ fun getChatHistory(
 - Hour limits (positive values, max 24 hours per day)
 - Travel information consistency checks
 - Employee ID format validation
+- Maximum hours per date range validation (8 hours per day)
+
+**Extension Functions for Clean Code:**
+```kotlin
+// Clean entity conversion in service layer
+private fun RegisterLeaveHoursRequest.toEntity(): LeaveHours = LeaveHours(...)
+private fun RegisterBillableHoursRequest.toEntity(): BillableClientHours = BillableClientHours(...)
+```
 
 ### Exception Handling Strategy
 
@@ -366,7 +374,10 @@ abstract class ServiceException(message: String, cause: Throwable? = null)
 // Specific exceptions for different domains
 class ChatServiceException(message: String, cause: Throwable? = null)
 class HourRegistrationException(message: String, cause: Throwable? = null)
+class DocumentServiceException(message: String, cause: Throwable? = null)
+class McpToolException(message: String, cause: Throwable? = null)
 class BusinessValidationException(message: String, cause: Throwable? = null)
+class ExternalServiceException(message: String, cause: Throwable? = null)
 ```
 
 **GlobalExceptionHandler Features:**
@@ -383,6 +394,11 @@ class BusinessValidationException(message: String, cause: Throwable? = null)
 # Configure allowed origins for your environment
 app.cors.allowed-origins=http://localhost:3000,http://localhost:8080
 ```
+
+The application implements both global and controller-level CORS configuration:
+- **Global CORS**: Configured in `WebConfig.kt` for all `/api/**` endpoints
+- **Controller CORS**: Additional `@CrossOrigin` annotations on controllers
+- **Environment-specific**: Origins configurable via `app.cors.allowed-origins` property
 
 **Input Sanitization:**
 - Path variable validation with regex patterns
