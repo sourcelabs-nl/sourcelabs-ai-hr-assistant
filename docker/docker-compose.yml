@@ -23,11 +23,11 @@ services:
     image: ollama/ollama:latest
     container_name: sourcechat-ollama-chat
     ports:
-      - "1234:11434"
+      - "11435:11434"
     volumes:
       - ollama_chat_data:/root/.ollama
       - ./init-scripts/ollama-entrypoint-model.sh:/entrypoint.sh
-    entrypoint: ["bash","/entrypoint.sh", "ollama", "serve"]
+    entrypoint: ["bash","/entrypoint.sh"]
     environment:
       - OLLAMA_HOST=0.0.0.0
     networks:
@@ -37,7 +37,7 @@ services:
     image: ollama/ollama:latest
     container_name: sourcechat-ollama-embeddings
     ports:
-      - "11434:11434"
+      - "11436:11434"
     volumes:
       - ollama_embeddings_data:/root/.ollama
       - ./init-scripts/ollama-entrypoint-embeddings.sh:/entrypoint.sh

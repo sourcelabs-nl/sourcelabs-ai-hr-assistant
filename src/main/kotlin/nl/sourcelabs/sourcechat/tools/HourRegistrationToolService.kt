@@ -28,7 +28,7 @@ class HourRegistrationToolService(
         totalHours: Double,
         description: String? = null
     ): String {
-        logger.info("MCP Tool: registerLeaveHours called - employeeId: {}, leaveType: {}, startDate: {}, totalHours: {}", 
+        logger.info("Tool call: registerLeaveHours called - employeeId: {}, leaveType: {}, startDate: {}, totalHours: {}", 
                    employeeId, leaveType, startDate, totalHours)
         return try {
             val request = RegisterLeaveHoursRequest(
@@ -41,11 +41,11 @@ class HourRegistrationToolService(
             )
             
             val result = hourRegistrationService.registerLeaveHours(request).message
-            logger.info("MCP Tool: registerLeaveHours completed successfully - employeeId: {}", employeeId)
+            logger.info("Tool call: registerLeaveHours completed successfully - employeeId: {}", employeeId)
             "✅ $result"
         } catch (e: Exception) {
             val errorMessage = "Error in registerLeaveHours: ${e.message}"
-            logger.error("MCP Tool: registerLeaveHours failed - employeeId: {}, error: {}", employeeId, e.message, e)
+            logger.error("Tool call: registerLeaveHours failed - employeeId: {}, error: {}", employeeId, e.message, e)
             "❌ $errorMessage"
         }
     }
@@ -65,7 +65,7 @@ class HourRegistrationToolService(
         travelToLocation: String? = null,
         hourlyRate: Double? = null
     ): String {
-        logger.info("MCP Tool: registerBillableHours called - employeeId: {}, clientName: {}, workDate: {}, hoursWorked: {}", 
+        logger.info("Tool call: registerBillableHours called - employeeId: {}, clientName: {}, workDate: {}, hoursWorked: {}", 
                    employeeId, clientName, workDate, hoursWorked)
         return try {
             val request = RegisterBillableHoursRequest(
@@ -84,48 +84,48 @@ class HourRegistrationToolService(
             )
             
             val result = hourRegistrationService.registerBillableHours(request).message
-            logger.info("MCP Tool: registerBillableHours completed successfully - employeeId: {}", employeeId)
+            logger.info("Tool call: registerBillableHours completed successfully - employeeId: {}", employeeId)
             "✅ $result"
         } catch (e: Exception) {
             val errorMessage = "Error in registerBillableHours: ${e.message}"
-            logger.error("MCP Tool: registerBillableHours failed - employeeId: {}, error: {}", employeeId, e.message, e)
+            logger.error("Tool call: registerBillableHours failed - employeeId: {}, error: {}", employeeId, e.message, e)
             "❌ $errorMessage"
         }
     }
 
     @Tool(description = "Get total leave hours for an employee in a specific year")
     fun getLeaveHoursSummary(employeeId: String, year: Int): String {
-        logger.info("MCP Tool: getLeaveHoursSummary called - employeeId: {}, year: {}", employeeId, year)
+        logger.info("Tool call: getLeaveHoursSummary called - employeeId: {}, year: {}", employeeId, year)
         return try {
             val totalHours = hourRegistrationService.getTotalLeaveHoursForYear(employeeId, year)
             val result = "Employee $employeeId has used $totalHours leave hours in $year"
-            logger.info("MCP Tool: getLeaveHoursSummary completed - employeeId: {}, year: {}, totalHours: {}", employeeId, year, totalHours)
+            logger.info("Tool call: getLeaveHoursSummary completed - employeeId: {}, year: {}, totalHours: {}", employeeId, year, totalHours)
             result
         } catch (e: Exception) {
             val result = "❌ Error retrieving leave hours: ${e.message}"
-            logger.error("MCP Tool: getLeaveHoursSummary failed - employeeId: {}, year: {}, error: {}", employeeId, year, e.message, e)
+            logger.error("Tool call: getLeaveHoursSummary failed - employeeId: {}, year: {}, error: {}", employeeId, year, e.message, e)
             result
         }
     }
 
     @Tool(description = "Get total billable hours for an employee in a specific year")
     fun getBillableHoursSummary(employeeId: String, year: Int): String {
-        logger.info("MCP Tool: getBillableHoursSummary called - employeeId: {}, year: {}", employeeId, year)
+        logger.info("Tool call: getBillableHoursSummary called - employeeId: {}, year: {}", employeeId, year)
         return try {
             val totalHours = hourRegistrationService.getTotalBillableHoursForYear(employeeId, year)
             val result = "Employee $employeeId has logged $totalHours billable hours in $year"
-            logger.info("MCP Tool: getBillableHoursSummary completed - employeeId: {}, year: {}, totalHours: {}", employeeId, year, totalHours)
+            logger.info("Tool call: getBillableHoursSummary completed - employeeId: {}, year: {}, totalHours: {}", employeeId, year, totalHours)
             result
         } catch (e: Exception) {
             val result = "❌ Error retrieving billable hours: ${e.message}"
-            logger.error("MCP Tool: getBillableHoursSummary failed - employeeId: {}, year: {}, error: {}", employeeId, year, e.message, e)
+            logger.error("Tool call: getBillableHoursSummary failed - employeeId: {}, year: {}, error: {}", employeeId, year, e.message, e)
             result
         }
     }
 
     @Tool(description = "Get recent leave history for an employee")
     fun getLeaveHistory(employeeId: String): String {
-        logger.info("MCP Tool: getLeaveHistory called - employeeId: {}", employeeId)
+        logger.info("Tool call: getLeaveHistory called - employeeId: {}", employeeId)
         return try {
             val leaveHours = hourRegistrationService.getLeaveHoursByEmployee(employeeId)
             val result = if (leaveHours.isEmpty()) {
@@ -136,18 +136,18 @@ class HourRegistrationToolService(
                 }
                 "Recent leave history for employee $employeeId:\n$summary"
             }
-            logger.info("MCP Tool: getLeaveHistory completed - employeeId: {}, recordCount: {}", employeeId, leaveHours.size)
+            logger.info("Tool call: getLeaveHistory completed - employeeId: {}, recordCount: {}", employeeId, leaveHours.size)
             result
         } catch (e: Exception) {
             val result = "❌ Error retrieving leave history: ${e.message}"
-            logger.error("MCP Tool: getLeaveHistory failed - employeeId: {}, error: {}", employeeId, e.message, e)
+            logger.error("Tool call: getLeaveHistory failed - employeeId: {}, error: {}", employeeId, e.message, e)
             result
         }
     }
 
     @Tool(description = "Get recent billable hours history for an employee")
     fun getBillableHistory(employeeId: String): String {
-        logger.info("MCP Tool: getBillableHistory called - employeeId: {}", employeeId)
+        logger.info("Tool call: getBillableHistory called - employeeId: {}", employeeId)
         return try {
             val billableHours = hourRegistrationService.getBillableHoursByEmployee(employeeId)
             val result = if (billableHours.isEmpty()) {
@@ -158,11 +158,11 @@ class HourRegistrationToolService(
                 }
                 "Recent billable hours for employee $employeeId:\n$summary"
             }
-            logger.info("MCP Tool: getBillableHistory completed - employeeId: {}, recordCount: {}", employeeId, billableHours.size)
+            logger.info("Tool call: getBillableHistory completed - employeeId: {}, recordCount: {}", employeeId, billableHours.size)
             result
         } catch (e: Exception) {
             val result = "❌ Error retrieving billable history: ${e.message}"
-            logger.error("MCP Tool: getBillableHistory failed - employeeId: {}, error: {}", employeeId, e.message, e)
+            logger.error("Tool call: getBillableHistory failed - employeeId: {}, error: {}", employeeId, e.message, e)
             result
         }
     }
