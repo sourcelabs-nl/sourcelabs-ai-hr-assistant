@@ -10,8 +10,8 @@ SourceChat is a fully-functional Spring Boot 3.5.0 HR assistant application buil
 
 ✅ **COMPLETED FEATURES:**
 - **AI Chat System**: Ollama llama3.2 for chat, nomic-embed-text for embeddings
-- **Hour Registration**: Leave hours and billable client hours with full CRUD operations and validation
-- **MCP Integration**: Server/client architecture for tool callbacks with structured error handling
+- **Hour Registration**: Leave hours and billable client hours with full CRUD operations and validation  
+- **Tool Integration**: Spring AI @Tool annotations for chat-based hour registration and retrieval
 - **RAG System**: PostgreSQL vector store with employee manual content and error recovery
 - **Chat Memory**: MessageChatMemoryAdvisor with configurable message window for conversation continuity
 - **Input Validation**: Jakarta Bean Validation with comprehensive constraints and business logic validation
@@ -29,14 +29,14 @@ SourceChat is a fully-functional Spring Boot 3.5.0 HR assistant application buil
 - Spring Boot 3.5.0 with Spring AI
 - Kotlin 1.9.25, Java 21
 - PostgreSQL with pgvector for vector storage
-- Spring Data JDBC for database operations
-- MCP (Model Context Protocol) for tool integration
+- Spring Data JDBC for database operations  
+- Spring AI @Tool annotations for tool integration
 - Log4j2 for structured logging and observability
 - ProblemDetail (RFC 7807) for standardized error responses
 
 **AI Stack:**
-- **Chat Model**: Ollama llama3.2 (localhost:1234)
-- **Embeddings**: Ollama nomic-embed-text (localhost:11434)
+- **Chat Model**: Ollama llama3.2 (localhost:11435)
+- **Embeddings**: Ollama nomic-embed-text (localhost:11436)
 - **Vector Store**: PostgreSQL pgvector with 768-dimensional embeddings
 - **RAG**: Employee manual content for context
 - **Memory**: MessageWindowChatMemory with 20-message sliding window
@@ -52,16 +52,13 @@ SourceChat is a fully-functional Spring Boot 3.5.0 HR assistant application buil
 **Services (Docker Compose):**
 ```yaml
 - postgres (5432): PostgreSQL with pgvector extension
-- ollama-chat (1234): Ollama llama3.2 for chat
-- ollama-embeddings (11434): Ollama nomic-embed-text for embeddings
+- ollama-chat (11435): Ollama llama3.2 for chat
+- ollama-embeddings (11436): Ollama nomic-embed-text for embeddings
 ```
 
 **Key Endpoints:**
 - `POST /api/chat`: Chat with HR assistant
-- `POST /api/hours/leave`: Register leave hours
-- `POST /api/hours/billable`: Register billable hours
-- `GET /api/hours/leave/{employeeId}`: Get leave history
-- `GET /api/hours/billable/{employeeId}`: Get billable history
+- `GET /api/chat/health`: Health check for chat service
 
 **Database Tables:**
 - `chat_messages`: Chat conversation history
@@ -73,7 +70,7 @@ SourceChat is a fully-functional Spring Boot 3.5.0 HR assistant application buil
 
 **1. Start Services:**
 ```bash
-docker-compose up -d
+cd docker && docker-compose up -d
 ```
 
 **2. Pull AI Models:**
@@ -110,8 +107,7 @@ docker exec sourcechat-ollama-embeddings ollama pull nomic-embed-text
 **Hour Registration System:**
 - Leave hours: Types, dates, approval workflow
 - Billable hours: Client, location, travel tracking
-- MCP tool integration for chat-based registration
-- REST API for direct access
+- Spring AI @Tool integration for chat-based registration
 
 **RAG (Retrieval Augmented Generation):**
 - Employee manual content in vector store
@@ -131,10 +127,9 @@ docker exec sourcechat-ollama-embeddings ollama pull nomic-embed-text
 - `src/main/kotlin/nl/sourcelabs/sourcechat/service/ChatService.kt`: Chat service with structured validation, specific exceptions, and modular design
 - `src/main/kotlin/nl/sourcelabs/sourcechat/service/HourRegistrationService.kt`: Transactional hour registration with business validation and extension functions
 - `src/main/kotlin/nl/sourcelabs/sourcechat/service/DocumentService.kt`: Vector store operations with comprehensive error handling
-- `src/main/kotlin/nl/sourcelabs/sourcechat/mcp/HourRegistrationMcpService.kt`: MCP tools with input validation and structured error responses
-- `src/main/kotlin/nl/sourcelabs/sourcechat/mcp/McpConfiguration.kt`: Separated MCP configuration beans
+- `src/main/kotlin/nl/sourcelabs/sourcechat/tools/HourRegistrationToolService.kt`: Spring AI @Tool annotations with input validation and structured error responses
+- `src/main/kotlin/nl/sourcelabs/sourcechat/tools/DateTimeTools.kt`: Date/time utility tools for chat interactions
 - `src/main/kotlin/nl/sourcelabs/sourcechat/controller/ChatController.kt`: REST API with comprehensive input validation and security
-- `src/main/kotlin/nl/sourcelabs/sourcechat/controller/HourRegistrationController.kt`: Hour registration API with path validation and CORS configuration
 - `src/main/kotlin/nl/sourcelabs/sourcechat/dto/ChatRequest.kt`: Request DTOs with Jakarta Bean Validation annotations
 - `src/main/kotlin/nl/sourcelabs/sourcechat/dto/HourRegistrationDtos.kt`: Hour registration DTOs with comprehensive validation constraints
 - `src/main/kotlin/nl/sourcelabs/sourcechat/exception/GlobalExceptionHandler.kt`: Enhanced exception handling with validation error support
@@ -146,13 +141,14 @@ docker exec sourcechat-ollama-embeddings ollama pull nomic-embed-text
 **Current System Prompt:**
 "You are the Sourcelabs HR assistant. You provide information about leave hours, billable client hours and the employee manual."
 
-**Available MCP Tools:**
+**Available Spring AI Tools:**
 - `registerLeaveHours`: Register employee leave hours
 - `registerBillableHours`: Register billable client hours
 - `getLeaveHoursSummary`: Get total leave hours for year
 - `getBillableHoursSummary`: Get total billable hours for year
 - `getLeaveHistory`: Get recent leave history
 - `getBillableHistory`: Get recent billable hours history
+- `getCurrentDateTime`: Get current date and time for date calculations
 
 **Example Queries:**
 - "Register 8 hours of sick leave for employee123 from 2025-06-13 to 2025-06-13"
@@ -164,7 +160,7 @@ docker exec sourcechat-ollama-embeddings ollama pull nomic-embed-text
 
 **Comprehensive Logging Coverage:**
 - **Chat Processing**: Session tracking, RAG search results, AI model calls, response metrics
-- **MCP Tool Execution**: All 6 tools with input parameters, success/failure tracking, execution context
+- **Tool Execution**: All 7 Spring AI tools with input parameters, success/failure tracking, execution context
 - **REST API Operations**: Request/response logging with key parameters (sessionId, employeeId, operation type)
 - **Vector Store Operations**: Document searches, embedding operations, result counts
 - **Database Operations**: Message persistence, hour registration, query execution
@@ -178,7 +174,7 @@ docker exec sourcechat-ollama-embeddings ollama pull nomic-embed-text
 - Consistent parameter logging with `{}` placeholders
 - Operation context (sessionId, employeeId, client names)
 - Timing and volume metrics (response length, document counts)
-- Clear component prefixes (`REST API:`, `MCP Tool:`, `RAG search:`)
+- Clear component prefixes (`REST API:`, `Tool call:`, `RAG search:`)
 
 **Exception Handling:**
 - **GlobalExceptionHandler**: Centralized error handling with `@ControllerAdvice`
@@ -298,6 +294,9 @@ The codebase follows these quality standards implemented throughout the applicat
 - **spring-ai-starter-vector-store-pgvector**: PostgreSQL vector store
 - **spring-ai-starter-mcp-client**: MCP client for tool integration  
 - **spring-ai-starter-mcp-server-webmvc**: MCP server for exposing tools
+- **spring-ai-client-chat**: Core chat client functionality
+- **spring-ai-vector-store**: Vector store abstraction
+- **spring-ai-advisors-vector-store**: Vector store advisor integration
 
 **Database & Storage:**
 - **postgresql**: PostgreSQL JDBC driver
