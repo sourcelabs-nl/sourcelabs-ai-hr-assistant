@@ -1,4 +1,4 @@
-package nl.sourcelabs.sourcechat.mcp
+package nl.sourcelabs.sourcechat.tools
 
 import nl.sourcelabs.sourcechat.dto.RegisterBillableHoursRequest
 import nl.sourcelabs.sourcechat.dto.RegisterLeaveHoursRequest

@@ -1,6 +1,7 @@
 package nl.sourcelabs.sourcechat.config
 
-import nl.sourcelabs.sourcechat.mcp.HourRegistrationToolService
+import nl.sourcelabs.sourcechat.tools.DateTimeTools
+import nl.sourcelabs.sourcechat.tools.HourRegistrationToolService
 import org.apache.logging.log4j.LogManager
 import org.springframework.ai.chat.client.ChatClient
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor
@@ -54,7 +55,7 @@ class ChatConfig {
                 QuestionAnswerAdvisor.builder(vectorStore).build(),
                 SimpleLoggerAdvisor()
             )
-            .defaultTools(hourRegistrationToolService)
+            .defaultTools(hourRegistrationToolService, DateTimeTools())
             .build()
     }
     
