@@ -7,6 +7,7 @@ import nl.sourcelabs.sourcechat.entity.TravelType
 import nl.sourcelabs.sourcechat.service.HourRegistrationService
 import org.apache.logging.log4j.LogManager
 import org.springframework.ai.tool.annotation.Tool
+import org.springframework.ai.tool.annotation.ToolParam
 import org.springframework.stereotype.Service
 import java.time.LocalDate
 
@@ -21,8 +22,10 @@ class HourRegistrationToolService(
     
     @Tool(description = "Register leave hours for an employee")
     fun registerLeaveHours(
+        @ToolParam(required = true, description = "Employee ID")
         employeeId: String,
         leaveType: String,
+        @ToolParam(required = true, description = "start date in YYYY-MM-DD format")
         startDate: String,
         endDate: String,
         totalHours: Double,
@@ -94,7 +97,11 @@ class HourRegistrationToolService(
     }
 
     @Tool(description = "Get total leave hours for an employee in a specific year")
-    fun getLeaveHoursSummary(employeeId: String, year: Int): String {
+    fun getLeaveHoursSummary(
+        @ToolParam(required = true, description = "Employee ID")
+        employeeId: String,
+        @ToolParam(required = true, description = "Year in YYYY format")
+        year: Int): String {
         logger.info("Tool call: getLeaveHoursSummary called - employeeId: {}, year: {}", employeeId, year)
         return try {
             val totalHours = hourRegistrationService.getTotalLeaveHoursForYear(employeeId, year)
