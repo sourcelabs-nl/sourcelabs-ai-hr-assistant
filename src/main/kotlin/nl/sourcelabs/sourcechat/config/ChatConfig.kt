@@ -45,8 +45,7 @@ class ChatConfig {
         vectorStore: VectorStore
     ): ChatClient {
         val systemPrompt = loadSystemPrompt()
-        logger.info("Creating chat client with system prompt loaded from: {}", 
-            systemPromptResource?.description ?: "default")
+        logger.info("Creating chat client with system prompt loaded from: {}",systemPromptResource?.description)
         
         return ChatClient.builder(chatModel)
             .defaultSystem(systemPrompt)
@@ -61,20 +60,10 @@ class ChatConfig {
     
     private fun loadSystemPrompt(): String {
         return try {
-            systemPromptResource?.inputStream?.bufferedReader()?.use { it.readText() }
-                ?: getDefaultSystemPrompt()
+            systemPromptResource?.inputStream?.bufferedReader()?.use { it.readText() }!!
         } catch (e: Exception) {
-            logger.warn("Failed to load system prompt from file, using default: {}", e.message)
-            getDefaultSystemPrompt()
+            logger.warn("Failed to load system prompt from file")
+            throw e
         }
     }
-    
-    private fun getDefaultSystemPrompt(): String = """
-        You are the Sourcelabs HR assistant. You provide information about leave hours, billable client hours and the employee manual.
-        
-        You have access to tools that allow you to directly register hours and retrieve hour summaries for employees. When users ask to register hours or get information about their hours, use the available tools to help them.
-        
-        Use today's date as reference when users say "today", "yesterday", etc.
-        Be helpful and guide users through the process step by step. Always use the tools to complete hour registration requests.
-    """.trimIndent()
 }
