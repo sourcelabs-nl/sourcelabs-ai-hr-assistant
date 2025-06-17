@@ -32,20 +32,7 @@ class ChatController(
         logger.info("Chat response sent - sessionId: {}", response.sessionId)
         return ResponseEntity.ok(response)
     }
-    
-    @GetMapping("/history/{sessionId}")
-    fun getChatHistory(
-        @PathVariable @Pattern(regexp = "^[a-zA-Z0-9-_]+$", message = "Invalid session ID format") 
-        sessionId: String
-    ): ResponseEntity<List<ChatMessage>> {
-        logger.info("Chat history requested - sessionId: {}", sessionId)
-        
-        val history = chatService.getChatHistory(sessionId)
-        logger.info("Chat history retrieved - sessionId: {}, count: {}", sessionId, history.size)
-        
-        return ResponseEntity.ok(history)
-    }
-    
+
     @GetMapping("/health")
     fun health(): ResponseEntity<Map<String, Any>> {
         logger.debug("Health check requested")

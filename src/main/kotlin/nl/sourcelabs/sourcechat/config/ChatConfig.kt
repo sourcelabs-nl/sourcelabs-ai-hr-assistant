@@ -9,13 +9,16 @@ import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor
 import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor
 import org.springframework.ai.chat.memory.ChatMemory
 import org.springframework.ai.chat.memory.MessageWindowChatMemory
+import org.springframework.ai.chat.memory.repository.jdbc.JdbcChatMemoryRepository
 import org.springframework.ai.chat.model.ChatModel
 import org.springframework.ai.vectorstore.VectorStore
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.io.Resource
+
 
 @Configuration
 class ChatConfig {
@@ -29,11 +32,12 @@ class ChatConfig {
     
     @Value("\${app.chat.system-prompt-file:classpath:system-prompt.txt}")
     private val systemPromptResource: Resource? = null
-    
+
     @Bean
-    fun chatMemory(): ChatMemory {
-        logger.info("Creating chat memory with max messages: {}", maxMessages)
+    fun chatMemory(chatMemoryRepository: JdbcChatMemoryRepository): ChatMemory {
+        logger.info("Creating in-memory chat memory with max messages: {}", maxMessages)
         return MessageWindowChatMemory.builder()
+            .chatMemoryRepository(chatMemoryRepository)
             .maxMessages(maxMessages)
             .build()
     }
