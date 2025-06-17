@@ -39,13 +39,14 @@ class ChatService(
     
     private fun generateAiResponse(request: ChatRequest, sessionId: String): String {
         return try {
-            chatClient.prompt()
+            val call = chatClient.prompt()
                 .advisors { advisorSpec ->
                     advisorSpec.param(ChatMemory.CONVERSATION_ID, sessionId)
                 }
                 .user(request.message)
                 .call()
-                .content()
+
+            call.content()
                 ?: throw ChatServiceException("AI model returned null response")
         } catch (e: Exception) {
             logger.error("AI model call failed - sessionId: {}", sessionId, e)
