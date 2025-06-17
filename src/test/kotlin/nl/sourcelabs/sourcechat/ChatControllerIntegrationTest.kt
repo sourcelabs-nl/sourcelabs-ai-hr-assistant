@@ -13,8 +13,7 @@ import org.springframework.test.context.TestPropertySource
 @Import(TestcontainersConfiguration::class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestPropertySource(properties = [
-    "spring.ai.anthropic.api-key=test-key",
-    "spring.sql.init.mode=never" // Disable schema initialization for tests
+    "spring.sql.init.mode=always" // Disable schema initialization for tests
 ])
 class ChatControllerIntegrationTest {
 

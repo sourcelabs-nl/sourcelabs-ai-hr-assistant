@@ -26,6 +26,8 @@ services:
       - "1234:11434"
     volumes:
       - ollama_chat_data:/root/.ollama
+      - ./init-scripts/ollama-entrypoint-model.sh:/entrypoint.sh
+    entrypoint: ["bash","/entrypoint.sh", "ollama", "serve"]
     environment:
       - OLLAMA_HOST=0.0.0.0
     networks:
@@ -38,6 +40,8 @@ services:
       - "11434:11434"
     volumes:
       - ollama_embeddings_data:/root/.ollama
+      - ./init-scripts/ollama-entrypoint-embeddings.sh:/entrypoint.sh
+    entrypoint: ["bash","/entrypoint.sh"]
     environment:
       - OLLAMA_HOST=0.0.0.0
     networks:

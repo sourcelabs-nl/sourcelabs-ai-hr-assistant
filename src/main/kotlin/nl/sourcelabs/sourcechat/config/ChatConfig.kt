@@ -1,12 +1,14 @@
 package nl.sourcelabs.sourcechat.config
 
+import nl.sourcelabs.sourcechat.mcp.HourRegistrationMcpService
 import org.apache.logging.log4j.LogManager
 import org.springframework.ai.chat.client.ChatClient
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor
+import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor
 import org.springframework.ai.chat.memory.ChatMemory
 import org.springframework.ai.chat.memory.MessageWindowChatMemory
 import org.springframework.ai.chat.model.ChatModel
-import org.springframework.ai.tool.ToolCallbackProvider
+import org.springframework.ai.vectorstore.VectorStore
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
@@ -37,8 +39,9 @@ class ChatConfig {
     @Bean
     fun chatClient(
         @Qualifier("ollamaChatModel") chatModel: ChatModel,
-        hourRegistrationToolCallbackProvider: ToolCallbackProvider,
-        chatMemory: ChatMemory
+        hourRegistrationMcpService: HourRegistrationMcpService,
+        chatMemory: ChatMemory,
+        vectorStore: VectorStore
     ): ChatClient {
         val systemPrompt = loadSystemPrompt()
         logger.info("Creating chat client with system prompt loaded from: {}", 
@@ -46,8 +49,11 @@ class ChatConfig {
         
         return ChatClient.builder(chatModel)
             .defaultSystem(systemPrompt)
-            .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
-            .defaultToolCallbacks(hourRegistrationToolCallbackProvider)
+            .defaultAdvisors(
+                MessageChatMemoryAdvisor.builder(chatMemory).build(),
+                QuestionAnswerAdvisor.builder(vectorStore).build()
+            )
+            .defaultTools(hourRegistrationMcpService)
             .build()
     }
     
