@@ -1,9 +1,10 @@
 package nl.sourcelabs.sourcechat.config
 
-import nl.sourcelabs.sourcechat.mcp.HourRegistrationMcpService
+import nl.sourcelabs.sourcechat.mcp.HourRegistrationToolService
 import org.apache.logging.log4j.LogManager
 import org.springframework.ai.chat.client.ChatClient
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor
+import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor
 import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor
 import org.springframework.ai.chat.memory.ChatMemory
 import org.springframework.ai.chat.memory.MessageWindowChatMemory
@@ -39,7 +40,7 @@ class ChatConfig {
     @Bean
     fun chatClient(
         @Qualifier("ollamaChatModel") chatModel: ChatModel,
-        hourRegistrationMcpService: HourRegistrationMcpService,
+        hourRegistrationToolService: HourRegistrationToolService,
         chatMemory: ChatMemory,
         vectorStore: VectorStore
     ): ChatClient {
@@ -51,9 +52,10 @@ class ChatConfig {
             .defaultSystem(systemPrompt)
             .defaultAdvisors(
                 MessageChatMemoryAdvisor.builder(chatMemory).build(),
-                QuestionAnswerAdvisor.builder(vectorStore).build()
+                QuestionAnswerAdvisor.builder(vectorStore).build(),
+                SimpleLoggerAdvisor()
             )
-            .defaultTools(hourRegistrationMcpService)
+            .defaultTools(hourRegistrationToolService)
             .build()
     }
     

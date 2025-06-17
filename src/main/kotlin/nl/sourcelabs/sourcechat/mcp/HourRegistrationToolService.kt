@@ -11,12 +11,12 @@ import org.springframework.stereotype.Service
 import java.time.LocalDate
 
 @Service
-class HourRegistrationMcpService(
+class HourRegistrationToolService(
     private val hourRegistrationService: HourRegistrationService
 ) {
 
     companion object {
-        private val logger = LogManager.getLogger(HourRegistrationMcpService::class.java)
+        private val logger = LogManager.getLogger(HourRegistrationToolService::class.java)
     }
     
     @Tool(description = "Register leave hours for an employee")

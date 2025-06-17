@@ -9,9 +9,9 @@ import org.springframework.context.annotation.Configuration
 class McpConfiguration {
 
     @Bean
-    fun hourRegistrationToolCallbackProvider(hourRegistrationMcpService: HourRegistrationMcpService): ToolCallbackProvider {
+    fun hourRegistrationToolCallbackProvider(hourRegistrationToolService: HourRegistrationToolService): ToolCallbackProvider {
         return MethodToolCallbackProvider.builder()
-            .toolObjects(hourRegistrationMcpService)
+            .toolObjects(hourRegistrationToolService)
             .build()
     }
 }
