@@ -11,7 +11,8 @@ import java.util.*
 
 @Service
 class ChatService(
-    private val chatClient: ChatClient
+    private val chatClient: ChatClient,
+    private val chatMemory: ChatMemory
 ) {
     
     companion object {
@@ -40,9 +41,7 @@ class ChatService(
     private fun generateAiResponse(request: ChatRequest, sessionId: String): String {
         return try {
             val call = chatClient.prompt()
-                .advisors { advisorSpec ->
-                    advisorSpec.param(ChatMemory.CONVERSATION_ID, sessionId)
-                }
+                .advisors { advisorSpec -> advisorSpec.param(ChatMemory.CONVERSATION_ID, sessionId) }
                 .user(request.message)
                 .call()
 
