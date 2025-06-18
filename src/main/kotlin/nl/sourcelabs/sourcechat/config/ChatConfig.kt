@@ -12,7 +12,6 @@ import org.springframework.ai.chat.memory.MessageWindowChatMemory
 import org.springframework.ai.chat.memory.repository.jdbc.JdbcChatMemoryRepository
 import org.springframework.ai.chat.model.ChatModel
 import org.springframework.ai.vectorstore.VectorStore
-import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -43,7 +42,7 @@ class ChatConfig {
     
     @Bean
     fun chatClient(
-        @Qualifier("ollamaChatModel") chatModel: ChatModel,
+        chatModel: ChatModel,
         hourRegistrationToolService: HourRegistrationToolService,
         chatMemory: ChatMemory,
         vectorStore: VectorStore
@@ -53,6 +52,7 @@ class ChatConfig {
         
         return ChatClient.builder(chatModel)
             .defaultSystem(systemPrompt)
+
             .defaultAdvisors(
                 MessageChatMemoryAdvisor.builder(chatMemory).build(),
                 QuestionAnswerAdvisor.builder(vectorStore).build(),

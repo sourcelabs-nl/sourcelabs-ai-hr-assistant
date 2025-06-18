@@ -27,7 +27,7 @@ class DocumentService(
     }
     
     fun searchSimilarDocuments(query: String, topK: Int = 5): List<Document> {
-        logger.info("Searching for similar documents - query: '{}', topK: {}", query.take(100), topK)
+        logger.debug("Searching for similar documents - query: '{}', topK: {}", query.take(100), topK)
         try {
             val searchRequest = SearchRequest.builder()
                 .query(query)

@@ -9,10 +9,10 @@ import org.springframework.ai.chat.memory.ChatMemory
 import org.springframework.stereotype.Service
 import java.util.*
 
+
 @Service
 class ChatService(
-    private val chatClient: ChatClient,
-    private val chatMemory: ChatMemory
+    private val chatClient: ChatClient
 ) {
     
     companion object {
@@ -40,7 +40,7 @@ class ChatService(
     
     private fun generateAiResponse(request: ChatRequest, sessionId: String): String {
         return try {
-            val call = chatClient.prompt()
+                 val call = chatClient.prompt()
                 .advisors { advisorSpec -> advisorSpec.param(ChatMemory.CONVERSATION_ID, sessionId) }
                 .user(request.message)
                 .call()

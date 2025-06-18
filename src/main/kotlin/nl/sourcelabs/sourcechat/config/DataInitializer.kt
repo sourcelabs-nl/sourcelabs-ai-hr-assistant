@@ -36,8 +36,10 @@ class DataInitializer(
                     if(documentService.searchSimilarDocuments(section).isNotEmpty()) null
                     else Document(section.trim())
                 }
-                documentService.addDocuments(documents)
-                logger.info("Successfully loaded {} sections from employee manual", documents.size)
+                if(documents.isNotEmpty()) {
+                    documentService.addDocuments(documents)
+                    logger.info("Successfully loaded {} sections from employee manual", documents.size)
+                }
             } else {
                 logger.warn("employee-manual.txt not found, using fallback content")
             }

@@ -1,0 +1,31 @@
+POST http://localhost:11434/api/chat
+Content-Type: application/json
+
+// This request is expected to fail because if no parameters are defined in the tools function,
+// The model fails to response with the tool_calls in the response,
+// instead it includes the function call in the message content.
+
+{
+  "model": "llama3.2",
+  "messages": [
+    {
+      "role": "user",
+      "content": "What is the current date?"
+    }
+  ],
+  "stream": false,
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "get_current_date",
+        "description": "Get the current date",
+        "parameters": {
+          "type": "object",
+          "properties": {},
+          "required": []
+        }
+      }
+    }
+  ]
+}

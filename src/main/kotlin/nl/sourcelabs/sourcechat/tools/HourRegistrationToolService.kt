@@ -24,11 +24,15 @@ class HourRegistrationToolService(
     fun registerLeaveHours(
         @ToolParam(required = true, description = "Employee ID")
         employeeId: String,
+        @ToolParam(required = true, description = "Values: PERSONAL_LEAVE, SICK_LEAVE, OTHER")
         leaveType: String,
-        @ToolParam(required = true, description = "start date in YYYY-MM-DD format")
+        @ToolParam(required = true, description = "Start date in YYYY-MM-DD format. Defaults to today if not provided.")
         startDate: String,
+        @ToolParam(required = false, description = "End date in YYYY-MM-DD format.")
         endDate: String,
+        @ToolParam(required = true, description = "Number of hours. Defaults to 8 if not provided.")
         totalHours: Double,
+        @ToolParam(required = false, description = "Text description of the leave reason.")
         description: String? = null
     ): String {
         logger.info("Tool call: registerLeaveHours called - employeeId: {}, leaveType: {}, startDate: {}, totalHours: {}", 
@@ -116,7 +120,12 @@ class HourRegistrationToolService(
     }
 
     @Tool(description = "Get total billable hours for an employee in a specific year")
-    fun getBillableHoursSummary(employeeId: String, year: Int): String {
+    fun getBillableHoursSummary(
+        @ToolParam(required = true, description = "Employee ID")
+        employeeId: String,
+        @ToolParam(required = true, description = "Year in YYYY format")
+        year: Int
+    ): String {
         logger.info("Tool call: getBillableHoursSummary called - employeeId: {}, year: {}", employeeId, year)
         return try {
             val totalHours = hourRegistrationService.getTotalBillableHoursForYear(employeeId, year)
@@ -131,7 +140,10 @@ class HourRegistrationToolService(
     }
 
     @Tool(description = "Get recent leave history for an employee")
-    fun getLeaveHistory(employeeId: String): String {
+    fun getLeaveHistory(
+        @ToolParam(required = true, description = "Employee ID")
+        employeeId: String
+    ): String {
         logger.info("Tool call: getLeaveHistory called - employeeId: {}", employeeId)
         return try {
             val leaveHours = hourRegistrationService.getLeaveHoursByEmployee(employeeId)
@@ -153,7 +165,10 @@ class HourRegistrationToolService(
     }
 
     @Tool(description = "Get recent billable hours history for an employee")
-    fun getBillableHistory(employeeId: String): String {
+    fun getBillableHistory(
+        @ToolParam(required = true, description = "Employee ID")
+        employeeId: String
+    ): String {
         logger.info("Tool call: getBillableHistory called - employeeId: {}", employeeId)
         return try {
             val billableHours = hourRegistrationService.getBillableHoursByEmployee(employeeId)

@@ -22,12 +22,8 @@ data class LeaveHours(
 )
 
 enum class LeaveType {
-    ANNUAL_LEAVE,
     SICK_LEAVE,
     PERSONAL_LEAVE,
-    MATERNITY_LEAVE,
-    PATERNITY_LEAVE,
-    BEREAVEMENT_LEAVE,
     OTHER
 }
 
