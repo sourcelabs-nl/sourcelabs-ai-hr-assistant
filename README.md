@@ -2,6 +2,8 @@
 
 A Spring Boot AI-powered chat application built with Spring AI and OpenAI API, designed to assist with HR-related queries about leave hours, billable client hours, and employee manual information.
 
+![SourceChat - HR Assistant](/design/preview.png)
+
 ## Features
 
 - ✅ **OpenAI Integration** - Uses OpenAI API for intelligent chat responses with local Ollama embeddings (nomic-embed-text)
