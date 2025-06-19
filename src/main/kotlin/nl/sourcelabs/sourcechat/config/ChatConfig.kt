@@ -52,7 +52,6 @@ class ChatConfig {
         
         return ChatClient.builder(chatModel)
             .defaultSystem(systemPrompt)
-
             .defaultAdvisors(
                 MessageChatMemoryAdvisor.builder(chatMemory).build(),
                 QuestionAnswerAdvisor.builder(vectorStore).build(),
