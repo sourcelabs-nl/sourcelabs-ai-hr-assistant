@@ -1,13 +1,13 @@
 # SourceChat - HR Assistant
 
-A Spring Boot AI-powered chat application built with Spring AI and Ollama, designed to assist with HR-related queries about leave hours, billable client hours, and employee manual information.
+A Spring Boot AI-powered chat application built with Spring AI and OpenAI API, designed to assist with HR-related queries about leave hours, billable client hours, and employee manual information.
 
 ## Features
 
-- ✅ **Ollama Integration** - Uses llama3.2 for intelligent chat responses and nomic-embed-text for embeddings
+- ✅ **OpenAI Integration** - Uses OpenAI API for intelligent chat responses with local Ollama embeddings (nomic-embed-text)
 - ✅ **Chat Memory** - MessageChatMemoryAdvisor with configurable message window for conversation continuity
 - ✅ **RAG (Retrieval Augmented Generation)** - Uses pgvector for similarity search on employee manual content
-- ✅ **React Frontend** - Modern Material UI chat interface built with TypeScript
+- ✅ **React Frontend** - Modern Material UI chat interface with sidebar, session management, and TypeScript
 - ✅ **REST API** - RESTful endpoints with comprehensive input validation and error handling
 - ✅ **MCP Support** - Model Context Protocol server and client for hour registration tools
 - ✅ **Hour Registration** - Complete leave hours and billable hours tracking system
@@ -19,10 +19,10 @@ A Spring Boot AI-powered chat application built with Spring AI and Ollama, desig
 ## Tech Stack
 
 - **Backend**: Spring Boot 3.5.0, Kotlin 1.9.25, Java 21
-- **AI**: Spring AI 1.0.0 with Ollama (llama3.2 + nomic-embed-text)
+- **AI**: Spring AI 1.0.0 with OpenAI API + local Ollama embeddings (nomic-embed-text)
 - **Database**: PostgreSQL with pgvector extension
 - **Data Layer**: Spring Data JDBC with transactional support
-- **Frontend**: React 18.2.0, TypeScript, Material UI
+- **Frontend**: React 18.2.0, TypeScript, Material UI with sidebar and session management
 - **Build**: Maven with automated frontend build
 - **Validation**: Jakarta Bean Validation with custom constraints
 - **Logging**: Log4j2 with structured logging and consistent patterns
@@ -37,11 +37,13 @@ A Spring Boot AI-powered chat application built with Spring AI and Ollama, desig
 ### Prerequisites
 - Java 21+
 - Docker and Docker Compose
-- Ollama installed locally
+- OpenAI API key
+- Ollama installed locally (for embeddings only)
 
-### 1. Setup Ollama Models
+### 1. Setup Configuration
 ```bash
-# Pull required models
+# Configure OpenAI API key in application.properties
+# Pull embedding model (Ollama)
 ./setup-ollama-models.sh
 ```
 
@@ -121,14 +123,13 @@ Content-Type: application/json
 Key configuration properties in `application.properties`:
 
 ```properties
-# Ollama Chat Configuration (llama3.2 on port 1234)
-spring.ai.ollama.chat.base-url=http://localhost:1234
-spring.ai.ollama.chat.options.model=llama3.2
-spring.ai.ollama.chat.options.temperature=0.7
+# OpenAI Chat Configuration
+spring.ai.openai.api-key=your_key_here
+spring.ai.openai.chat.options.temperature=0.1
 
-# Ollama Embeddings Configuration (nomic-embed-text on port 11434)
-spring.ai.ollama.embedding.base-url=http://localhost:11434
-spring.ai.ollama.embedding.options.model=nomic-embed-text
+# Local Ollama Embeddings Configuration (nomic-embed-text)
+spring.ai.openai.embedding.base-url=http://localhost:11434
+spring.ai.openai.embedding.options.model=nomic-embed-text
 
 # PostgreSQL Database
 spring.datasource.url=jdbc:postgresql://localhost:5432/sourcechat
@@ -225,12 +226,23 @@ npm install
 npm start
 ```
 
+### HTTP Testing
+```bash
+# Test API endpoints directly
+# Available test files in http/ directory:
+# - tool-call.http: Direct tool testing
+# - broken-tool-call.http: Error scenarios
+# - tool-conversation.http: Conversation flows
+```
+
 ## Architecture
 
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
 │   React UI      │    │  REST API       │    │  Chat Service   │
 │ (Material UI)   │───▶│  (Validated)    │───▶│  (Spring AI)    │
+│ + Sidebar       │    │                 │    │                 │
+│ + Sessions      │    │                 │    │                 │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
                                 │                       │
                                 ▼                       ▼
@@ -241,9 +253,9 @@ npm start
                                 │                       │
                                 ▼                       ▼
                               ┌─────────────────┐    ┌─────────────────┐
-                              │  PostgreSQL     │    │  Ollama         │
-                              │  + pgvector     │    │  llama3.2 +     │
-                              │  (RAG Storage)  │    │  nomic-embed    │
+                              │  PostgreSQL     │    │  OpenAI API +   │
+                              │  + pgvector     │    │  Local Ollama   │
+                              │  (RAG Storage)  │    │  (embeddings)   │
                               └─────────────────┘    └─────────────────┘
                                         │                       │
                                         ▼                       ▼
@@ -281,15 +293,31 @@ npm start
 - Environment-specific configuration support
 - Configurable chat memory and system prompts
 
-## Chat Memory & Conversation Continuity
+## Chat Memory & Session Management
 
-The application uses Spring AI's `MessageChatMemoryAdvisor` to maintain conversation context:
+The application features comprehensive session management with both backend memory and frontend persistence:
 
+**Backend Memory (Spring AI):**
 - **Configurable Window**: Retains configurable number of messages per session (default: 20)
 - **Session-based**: Each chat session has isolated memory using validated sessionId
 - **Automatic Management**: Spring AI handles message retrieval and context injection
 - **Combined with RAG**: Memory works alongside document search for comprehensive responses
 - **Error Recovery**: Graceful handling of memory failures with proper fallbacks
+
+**Frontend Session Management:**
+- **Sidebar Interface**: Clean Material UI sidebar showing all chat sessions
+- **Local Storage**: Sessions persist in browser localStorage for continuity
+- **Session Creation**: Automatic session creation with timestamps
+- **Session Deletion**: Users can delete individual sessions
+- **Session Navigation**: Easy switching between different conversations
+
+**Enhanced System Prompt:**
+The current system prompt provides detailed guidance including:
+- Employee ID validation requirements
+- Date handling with current date detection
+- Step-by-step user guidance
+- Error handling and validation
+- Tool usage instructions
 
 **Configuration:**
 ```properties
@@ -309,7 +337,8 @@ This ensures the HR assistant remembers previous interactions within a session, 
 - Session IDs are validated using regex patterns for security
 - Memory is isolated per session to prevent data leakage
 - Automatic session generation when not provided
-- Proper error handling for invalid or expired sessions
+- Frontend session persistence with localStorage
+- User-friendly session management through sidebar interface
 
 ## Employee Manual Content
 
@@ -448,11 +477,12 @@ The application now validates input and provides helpful error messages:
 
 ## Troubleshooting
 
-### Ollama Model Issues
+### OpenAI API Issues
 If chat responses fail:
-1. Ensure Ollama models are pulled: `./setup-ollama-models.sh`
-2. Verify Ollama services are running on correct ports (1234 for chat, 11434 for embeddings)
-3. Check Docker containers: `docker ps`
+1. Verify OpenAI API key is set in application.properties
+2. Check API key has sufficient credits and permissions
+3. Ensure embeddings service (Ollama) is running on port 11434: `./setup-ollama-models.sh`
+4. Check Docker containers: `docker ps`
 
 ### Vector Store Issues
 If you encounter vector store errors:

@@ -4,12 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-SourceChat is a fully-functional Spring Boot 3.5.0 HR assistant application built with Kotlin and Java 21. It provides AI-powered chat functionality for hour registration and employee manual queries using local Ollama models and RAG capabilities.
+SourceChat is a fully-functional Spring Boot 3.5.0 HR assistant application built with Kotlin and Java 21. It provides AI-powered chat functionality for hour registration and employee manual queries using OpenAI API with local Ollama embeddings and RAG capabilities.
 
 ## Current Implementation Status
 
 ✅ **COMPLETED FEATURES:**
-- **AI Chat System**: Ollama llama3.2 for chat, nomic-embed-text for embeddings
+- **AI Chat System**: OpenAI API for chat, local Ollama nomic-embed-text for embeddings
 - **Hour Registration**: Leave hours and billable client hours with full CRUD operations and validation  
 - **Tool Integration**: Spring AI @Tool annotations for chat-based hour registration and retrieval
 - **RAG System**: PostgreSQL vector store with employee manual content and error recovery
@@ -19,7 +19,7 @@ SourceChat is a fully-functional Spring Boot 3.5.0 HR assistant application buil
 - **Security & Configuration**: CORS configuration, input sanitization, externalized settings with environment support
 - **Comprehensive Logging**: Structured logging with consistent patterns and companion objects throughout application
 - **Code Quality**: Kotlin idiomatic patterns, transactional service layer, extension functions for clean conversions
-- **React Frontend**: Material UI chat interface with TypeScript
+- **React Frontend**: Material UI two-pane interface with sidebar, session management, and TypeScript
 - **Database Schema**: PostgreSQL with pgvector extension and proper transaction boundaries
 - **Docker Setup**: Multi-service composition with health checks
 
@@ -35,16 +35,18 @@ SourceChat is a fully-functional Spring Boot 3.5.0 HR assistant application buil
 - ProblemDetail (RFC 7807) for standardized error responses
 
 **AI Stack:**
-- **Chat Model**: Ollama llama3.2 (localhost:11435)
-- **Embeddings**: Ollama nomic-embed-text (localhost:11436)
+- **Chat Model**: OpenAI API (configurable temperature: 0.1)
+- **Embeddings**: Local Ollama nomic-embed-text (localhost:11434)
 - **Vector Store**: PostgreSQL pgvector with 768-dimensional embeddings
 - **RAG**: Employee manual content for context
-- **Memory**: MessageWindowChatMemory with 20-message sliding window
+- **Memory**: MessageWindowChatMemory with 20-message sliding window + frontend localStorage
 
 **Frontend Stack:**
 - React 18.2.0 with TypeScript 4.9.4
 - Material UI 5.14.20 for styling
-- Chat interface with real-time messaging
+- Two-pane interface: sidebar + chat area
+- Session management with localStorage persistence
+- Real-time messaging with chat history
 - Integrated with Spring Boot static resources
 
 ## Current Configuration
@@ -52,9 +54,11 @@ SourceChat is a fully-functional Spring Boot 3.5.0 HR assistant application buil
 **Services (Docker Compose):**
 ```yaml
 - postgres (5432): PostgreSQL with pgvector extension
-- ollama-chat (11435): Ollama llama3.2 for chat
-- ollama-embeddings (11436): Ollama nomic-embed-text for embeddings
+- ollama-embeddings (11434): Ollama nomic-embed-text for embeddings
 ```
+
+**External Services:**
+- OpenAI API: Chat completion with configurable temperature
 
 **Key Endpoints:**
 - `POST /api/chat`: Chat with HR assistant
@@ -73,13 +77,13 @@ SourceChat is a fully-functional Spring Boot 3.5.0 HR assistant application buil
 cd docker && docker-compose up -d
 ```
 
-**2. Pull AI Models:**
+**2. Configure API and Pull Models:**
 ```bash
-# Chat model
-docker exec sourcechat-ollama-chat ollama pull llama3.2
+# Set OpenAI API key in application.properties
+# spring.ai.openai.api-key=your_key_here
 
-# Embedding model  
-docker exec sourcechat-ollama-embeddings ollama pull nomic-embed-text
+# Pull embedding model (Ollama)
+./setup-ollama-models.sh
 ```
 
 **3. Build Frontend:**
@@ -103,6 +107,8 @@ docker exec sourcechat-ollama-embeddings ollama pull nomic-embed-text
 - Employee manual queries with RAG
 - Tool-based hour registration and retrieval
 - Session-based chat memory with automatic conversation continuity
+- Frontend session management with sidebar navigation
+- Persistent chat history with localStorage
 
 **Hour Registration System:**
 - Leave hours: Types, dates, approval workflow
@@ -115,15 +121,18 @@ docker exec sourcechat-ollama-embeddings ollama pull nomic-embed-text
 - Context-aware responses
 
 **Frontend Interface:**
-- Material UI chat interface
-- Real-time messaging
+- Material UI two-pane layout
+- Sidebar with session management (create, delete, navigate)
+- Real-time messaging with enhanced UX
+- Persistent sessions with localStorage
 - Example queries and suggestions
 - Error handling and loading states
+- Session timestamps and organization
 
 ## Implementation Details
 
 **Key Source Files:**
-- `src/main/kotlin/nl/sourcelabs/sourcechat/config/ChatConfig.kt`: Chat client configuration with externalized settings and system prompt loading
+- `src/main/kotlin/nl/sourcelabs/sourcechat/config/ChatConfig.kt`: OpenAI chat client configuration with externalized settings and system prompt loading
 - `src/main/kotlin/nl/sourcelabs/sourcechat/service/ChatService.kt`: Chat service with structured validation, specific exceptions, and modular design
 - `src/main/kotlin/nl/sourcelabs/sourcechat/service/HourRegistrationService.kt`: Transactional hour registration with business validation and extension functions
 - `src/main/kotlin/nl/sourcelabs/sourcechat/service/DocumentService.kt`: Vector store operations with comprehensive error handling
@@ -136,10 +145,22 @@ docker exec sourcechat-ollama-embeddings ollama pull nomic-embed-text
 - `src/main/kotlin/nl/sourcelabs/sourcechat/exception/ServiceExceptions.kt`: Specific exception hierarchy for different service domains
 - `src/main/resources/system-prompt.txt`: Externalized system prompt for maintainability
 - `src/main/resources/schema.sql`: Database schema with vector_store table
-- `frontend/src/components/ChatInterface.tsx`: React chat UI component
+- `src/main/frontend/src/components/ChatInterface.tsx`: React chat UI component
+- `src/main/frontend/src/components/Sidebar.tsx`: Session management sidebar component
+- `src/main/frontend/src/services/chatSessionService.ts`: Frontend session management service
+- `src/main/frontend/src/types/chat.ts`: TypeScript type definitions
+- `build-frontend.sh`: Automated frontend build script
+- `setup-ollama-models.sh`: Ollama model setup script
+- `http/`: HTTP test files for API endpoint testing
 
 **Current System Prompt:**
-"You are the Sourcelabs HR assistant. You provide information about leave hours, billable client hours and the employee manual."
+Comprehensive HR assistant prompt with detailed instructions including:
+- Employee ID validation requirements
+- Date handling with current date detection (YYYY-MM-DD format)
+- Step-by-step user guidance and confirmation processes
+- Tool usage requirements (never just provide instructions)
+- Error handling and validation procedures
+- Conversational and helpful interaction guidelines
 
 **Available Spring AI Tools:**
 - `registerLeaveHours`: Register employee leave hours
@@ -232,6 +253,9 @@ The codebase follows these quality standards implemented throughout the applicat
   - ensure all validation annotations are properly applied
   - verify error handling follows established patterns
   - confirm logging follows consistent standards
+  - test frontend functionality including session management
+  - verify OpenAI API integration works correctly
+  - ensure local Ollama embeddings are functioning
   - create a commit with the message "feat: <description of the feature>".
 
 ## Key Technologies
@@ -252,8 +276,14 @@ The codebase follows these quality standards implemented throughout the applicat
 # Build the project
 ./mvnw clean compile
 
-# Create executable JAR
+# Create executable JAR with frontend
 ./mvnw clean package
+
+# Build frontend manually
+./build-frontend.sh
+
+# Setup Ollama models for embeddings
+./setup-ollama-models.sh
 ```
 
 ### Testing
@@ -290,7 +320,7 @@ The codebase follows these quality standards implemented throughout the applicat
 ## Important Dependencies
 
 **Spring AI Stack:**
-- **spring-ai-starter-model-ollama**: Ollama integration for chat and embeddings
+- **spring-ai-starter-model-openai**: OpenAI API integration for chat
 - **spring-ai-starter-vector-store-pgvector**: PostgreSQL vector store
 - **spring-ai-starter-mcp-client**: MCP client for tool integration  
 - **spring-ai-starter-mcp-server-webmvc**: MCP server for exposing tools
