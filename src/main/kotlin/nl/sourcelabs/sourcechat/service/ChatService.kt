@@ -39,6 +39,7 @@ class ChatService(
     private fun generateSessionId(): String = UUID.randomUUID().toString()
     
     private fun generateAiResponse(request: ChatRequest, sessionId: String): String {
+
         return try {
                  val call = chatClient.prompt()
                 .advisors { advisorSpec -> advisorSpec.param(ChatMemory.CONVERSATION_ID, sessionId) }

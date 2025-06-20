@@ -6,11 +6,15 @@ import org.apache.logging.log4j.LogManager
 import org.springframework.ai.chat.client.ChatClient
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor
 import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor
-import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor
 import org.springframework.ai.chat.memory.ChatMemory
 import org.springframework.ai.chat.memory.MessageWindowChatMemory
 import org.springframework.ai.chat.memory.repository.jdbc.JdbcChatMemoryRepository
 import org.springframework.ai.chat.model.ChatModel
+import org.springframework.ai.rag.advisor.RetrievalAugmentationAdvisor
+import org.springframework.ai.rag.preretrieval.query.transformation.QueryTransformer
+import org.springframework.ai.rag.preretrieval.query.transformation.TranslationQueryTransformer
+import org.springframework.ai.rag.retrieval.search.DocumentRetriever
+import org.springframework.ai.rag.retrieval.search.VectorStoreDocumentRetriever
 import org.springframework.ai.vectorstore.VectorStore
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
@@ -39,22 +43,53 @@ class ChatConfig {
             .maxMessages(maxMessages)
             .build()
     }
-    
+
+    @Bean
+    fun queryTransformer(chatModel: ChatModel): QueryTransformer {
+        return TranslationQueryTransformer.builder()
+            .chatClientBuilder(ChatClient.builder(chatModel))
+            .targetLanguage("english")
+            .build()
+    }
+
+    @Bean
+    fun documentRetriever(vectorStore: VectorStore): DocumentRetriever {
+        return VectorStoreDocumentRetriever.builder()
+            .similarityThreshold(0.5)
+            .topK(10)
+            .vectorStore(vectorStore)
+            .build()
+    }
+
+    @Bean
+    fun retrievalAugmentationAdvisor(
+        documentRetriever: DocumentRetriever,
+        queryTransformer: QueryTransformer
+    ): RetrievalAugmentationAdvisor {
+
+        val retrievalAugmentationAdvisor = RetrievalAugmentationAdvisor.builder()
+            .documentRetriever(documentRetriever)
+            .queryTransformers(queryTransformer)
+            .build()
+
+        return retrievalAugmentationAdvisor
+    }
+
     @Bean
     fun chatClient(
         chatModel: ChatModel,
-        hourRegistrationToolService: HourRegistrationToolService,
         chatMemory: ChatMemory,
-        vectorStore: VectorStore
+        hourRegistrationToolService: HourRegistrationToolService,
+        retrievalAugmentationAdvisor: RetrievalAugmentationAdvisor,
     ): ChatClient {
         val systemPrompt = loadSystemPrompt()
         logger.info("Creating chat client with system prompt loaded from: {}",systemPromptResource?.description)
-        
+
         return ChatClient.builder(chatModel)
             .defaultSystem(systemPrompt)
             .defaultAdvisors(
+                retrievalAugmentationAdvisor,
                 MessageChatMemoryAdvisor.builder(chatMemory).build(),
-                QuestionAnswerAdvisor.builder(vectorStore).build(),
                 SimpleLoggerAdvisor()
             )
             .defaultTools(hourRegistrationToolService, DateTimeTools())
