@@ -1,1 +1,1 @@
-Bring the documentation up to date with the latest changes in the codebase.
+Bring the existing documentation up to date with the latest changes in the codebase, README.md and CLAUDE.md.
