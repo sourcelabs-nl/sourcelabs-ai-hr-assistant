@@ -8,7 +8,7 @@ A Spring Boot AI-powered chat application built with Spring AI and OpenAI API, d
 
 - ✅ **OpenAI Integration** - Uses OpenAI API for intelligent chat responses with local Ollama embeddings (nomic-embed-text)
 - ✅ **Chat Memory** - MessageChatMemoryAdvisor with configurable message window for conversation continuity
-- ✅ **RAG (Retrieval Augmented Generation)** - Uses pgvector for similarity search on employee manual content
+- ✅ **Enhanced RAG (Retrieval Augmented Generation)** - Modern Spring AI RAG architecture with RetrievalAugmentationAdvisor, multilingual query transformation, and optimized document retrieval
 - ✅ **React Frontend** - Modern Material UI chat interface with sidebar, session management, and TypeScript
 - ✅ **REST API** - RESTful endpoints with comprehensive input validation and error handling
 - ✅ **MCP Support** - Model Context Protocol server and client for hour registration tools
@@ -21,7 +21,7 @@ A Spring Boot AI-powered chat application built with Spring AI and OpenAI API, d
 ## Tech Stack
 
 - **Backend**: Spring Boot 3.5.0, Kotlin 1.9.25, Java 21
-- **AI**: Spring AI 1.0.0 with OpenAI API + local Ollama embeddings (nomic-embed-text)
+- **AI**: Spring AI 1.0.0 with OpenAI API + enhanced RAG architecture (RetrievalAugmentationAdvisor, QueryTransformer, DocumentRetriever)
 - **Database**: PostgreSQL with pgvector extension
 - **Data Layer**: Spring Data JDBC with transactional support
 - **Frontend**: React 18.2.0, TypeScript, Material UI with sidebar and session management
@@ -303,7 +303,7 @@ The application features comprehensive session management with both backend memo
 - **Configurable Window**: Retains configurable number of messages per session (default: 20)
 - **Session-based**: Each chat session has isolated memory using validated sessionId
 - **Automatic Management**: Spring AI handles message retrieval and context injection
-- **Combined with RAG**: Memory works alongside document search for comprehensive responses
+- **Combined with Enhanced RAG**: Memory works alongside modern RetrievalAugmentationAdvisor for comprehensive responses with multilingual support
 - **Error Recovery**: Graceful handling of memory failures with proper fallbacks
 
 **Frontend Session Management:**

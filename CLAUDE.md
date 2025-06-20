@@ -12,7 +12,7 @@ SourceChat is a fully-functional Spring Boot 3.5.0 HR assistant application buil
 - **AI Chat System**: OpenAI API for chat, local Ollama nomic-embed-text for embeddings
 - **Hour Registration**: Leave hours and billable client hours with full CRUD operations and validation  
 - **Tool Integration**: Spring AI @Tool annotations for chat-based hour registration and retrieval
-- **RAG System**: PostgreSQL vector store with employee manual content and error recovery
+- **Enhanced RAG System**: Modern Spring AI RAG architecture with RetrievalAugmentationAdvisor, multilingual query transformation, and optimized document retrieval
 - **Chat Memory**: MessageChatMemoryAdvisor with configurable message window for conversation continuity
 - **Input Validation**: Jakarta Bean Validation with comprehensive constraints and business logic validation
 - **Exception Handling**: Centralized GlobalExceptionHandler with RFC 7807 ProblemDetail responses and specific exception types
@@ -38,7 +38,9 @@ SourceChat is a fully-functional Spring Boot 3.5.0 HR assistant application buil
 - **Chat Model**: OpenAI API (configurable temperature: 0.1)
 - **Embeddings**: Local Ollama nomic-embed-text (localhost:11434)
 - **Vector Store**: PostgreSQL pgvector with 768-dimensional embeddings
-- **RAG**: Employee manual content for context
+- **Enhanced RAG**: Modern RetrievalAugmentationAdvisor with QueryTransformer and DocumentRetriever
+- **Query Processing**: TranslationQueryTransformer for multilingual support (English target)
+- **Document Retrieval**: VectorStoreDocumentRetriever with similarity threshold 0.5 and top-K 10
 - **Memory**: MessageWindowChatMemory with 20-message sliding window + frontend localStorage
 
 **Frontend Stack:**
@@ -115,10 +117,14 @@ cd docker && docker-compose up -d
 - Billable hours: Client, location, travel tracking
 - Spring AI @Tool integration for chat-based registration
 
-**RAG (Retrieval Augmented Generation):**
-- Employee manual content in vector store
-- Semantic search for relevant information
-- Context-aware responses
+**Enhanced RAG (Retrieval Augmented Generation):**
+- Modern Spring AI RAG architecture with RetrievalAugmentationAdvisor
+- Multilingual query transformation with TranslationQueryTransformer (English target)
+- Optimized document retrieval with VectorStoreDocumentRetriever
+- Configurable similarity threshold (0.5) and top-K (10) for optimal relevance
+- Employee manual content in PostgreSQL vector store
+- Enhanced semantic search with improved accuracy
+- Context-aware responses with better document ranking
 
 **Frontend Interface:**
 - Material UI two-pane layout
@@ -132,7 +138,7 @@ cd docker && docker-compose up -d
 ## Implementation Details
 
 **Key Source Files:**
-- `src/main/kotlin/nl/sourcelabs/sourcechat/config/ChatConfig.kt`: OpenAI chat client configuration with externalized settings and system prompt loading
+- `src/main/kotlin/nl/sourcelabs/sourcechat/config/ChatConfig.kt`: OpenAI chat client with enhanced RAG configuration (RetrievalAugmentationAdvisor, QueryTransformer, DocumentRetriever)
 - `src/main/kotlin/nl/sourcelabs/sourcechat/service/ChatService.kt`: Chat service with structured validation, specific exceptions, and modular design
 - `src/main/kotlin/nl/sourcelabs/sourcechat/service/HourRegistrationService.kt`: Transactional hour registration with business validation and extension functions
 - `src/main/kotlin/nl/sourcelabs/sourcechat/service/DocumentService.kt`: Vector store operations with comprehensive error handling
@@ -170,6 +176,15 @@ Comprehensive HR assistant prompt with detailed instructions including:
 - `getLeaveHistory`: Get recent leave history
 - `getBillableHistory`: Get recent billable hours history
 - `getCurrentDateTime`: Get current date and time for date calculations
+
+**Enhanced RAG Configuration:**
+- **RetrievalAugmentationAdvisor**: Modern Spring AI RAG implementation replacing QuestionAnswerAdvisor
+- **QueryTransformer**: TranslationQueryTransformer for multilingual query support (English target)
+- **DocumentRetriever**: VectorStoreDocumentRetriever with optimized settings:
+  - Similarity threshold: 0.5 for balanced precision/recall
+  - Top-K: 10 documents for comprehensive context
+  - COSINE_DISTANCE for vector similarity calculations
+- **Vector Store**: PostgreSQL pgvector with 768-dimensional embeddings
 
 **Example Queries:**
 - "Register 8 hours of sick leave for employee123 from 2025-06-13 to 2025-06-13"
@@ -321,6 +336,7 @@ The codebase follows these quality standards implemented throughout the applicat
 
 **Spring AI Stack:**
 - **spring-ai-starter-model-openai**: OpenAI API integration for chat
+- **spring-ai-rag**: Modern RAG implementation with RetrievalAugmentationAdvisor
 - **spring-ai-starter-vector-store-pgvector**: PostgreSQL vector store
 - **spring-ai-starter-mcp-client**: MCP client for tool integration  
 - **spring-ai-starter-mcp-server-webmvc**: MCP server for exposing tools
